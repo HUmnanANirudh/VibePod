@@ -89,16 +89,20 @@ export function Timeline() {
 
     return (
         <div 
-            className="flex-1 overflow-auto bg-background/50 relative select-none"
+            className="flex-1 overflow-auto bg-zinc-950 relative select-none"
+            style={{
+                backgroundImage: 'radial-gradient(circle at 50% 50%, #18181b 1px, transparent 1px)',
+                backgroundSize: '24px 24px'
+            }}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
         >
             <div className="flex flex-col min-w-[max-content]">
                  {/* Ruler */}
-                 <div className="flex h-8 border-b pl-64 sticky top-0 bg-background z-10 w-full">
+                 <div className="flex h-8 border-b border-zinc-800 pl-64 sticky top-0 bg-zinc-900/90 backdrop-blur z-10 w-full shadow-lg">
                      {Array.from({ length: TOTAL_BARS }).map((_, i) => (
-                         <div key={i} className="flex-shrink-0 border-l px-1 text-xs text-muted-foreground" style={{ width: PIXELS_PER_BAR }}>
+                         <div key={i} className="flex-shrink-0 border-l border-zinc-700/50 px-1 text-[10px] font-mono text-zinc-500" style={{ width: PIXELS_PER_BAR }}>
                              {i + 1}
                          </div>
                      ))}
@@ -106,18 +110,18 @@ export function Timeline() {
 
                  {/* Tracks */}
                  {project.tracks.map(track => (
-                     <div key={track.id} className="flex border-b hover:bg-muted/10">
+                     <div key={track.id} className="flex border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors">
                          <TrackControls track={track} />
                          
                          {/* Lane */}
                          <div 
-                            className="relative h-24 flex-1 bg-gradient-to-r from-transparent to-muted/5 w-[3840px]" // 32 * 120
+                            className="relative h-24 flex-1 w-[3840px] bg-zinc-900/20" 
                             onClick={(e) => handleTrackClick(track.id, e)}
                          >
                                 {/* Grid Lines */}
                                 <div className="absolute inset-0 flex pointer-events-none">
                                      {Array.from({ length: TOTAL_BARS }).map((_, i) => (
-                                         <div key={i} className="flex-shrink-0 border-r border-dashed border-border/20 h-full" style={{ width: PIXELS_PER_BAR }}></div>
+                                         <div key={i} className="flex-shrink-0 border-r border-dashed border-zinc-800/30 h-full" style={{ width: PIXELS_PER_BAR }}></div>
                                      ))}
                                 </div>
                                 
@@ -126,9 +130,10 @@ export function Timeline() {
                                     <div
                                         key={`${clip.startBar}-${idx}`}
                                         className={cn(
-                                            "absolute top-2 bottom-2 rounded-md border border-white/10 shadow-sm cursor-grab active:cursor-grabbing flex items-center justify-center overflow-hidden",
+                                            "absolute top-1 bottom-1 rounded border-t border-white/20 border-b border-black/40 shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center overflow-hidden",
                                             LOOP_COLORS[track.type] || "bg-zinc-700",
-                                            "opacity-80 hover:opacity-100"
+                                            "after:absolute after:inset-0 after:bg-gradient-to-b after:from-white/10 after:to-transparent hover:brightness-110 transition-all",
+                                            // Add a metallic sheen or striping if desired
                                         )}
                                         style={{
                                             left: clip.startBar * PIXELS_PER_BAR,
@@ -136,10 +141,10 @@ export function Timeline() {
                                         }}
                                         onMouseDown={(e) => handleMouseDown(e, track.id, idx, clip.startBar)}
                                         onContextMenu={(e) => deleteClip(e, track.id, idx)}
-                                        onClick={(e) => e.stopPropagation()} // Prevent adding clip underneath
+                                        onClick={(e) => e.stopPropagation()} 
                                         title="Drag to move, Shift+Click or Right Click to delete"
                                     >
-                                        <div className="text-white/50 text-xs font-bold pointer-events-none truncate px-1">
+                                        <div className="relative z-10 text-white/90 text-[10px] font-bold pointer-events-none truncate px-2 drop-shadow-md">
                                             {track.loopId}
                                         </div>
                                     </div>
@@ -150,9 +155,11 @@ export function Timeline() {
                  
                  {/* Playhead */}
                  <div 
-                    className="absolute top-8 bottom-0 w-0.5 bg-red-500 z-20 pointer-events-none transition-all duration-75"
-                    style={{ left: 256 + (currentBar * PIXELS_PER_BAR) }} // 256 is sidebar width (w-64)
-                 />
+                    className="absolute top-8 bottom-0 w-[2px] bg-cyan-500 z-20 pointer-events-none transition-all duration-75 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)]"
+                    style={{ left: 256 + (currentBar * PIXELS_PER_BAR) }}
+                 >
+                    <div className="absolute -top-1 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-cyan-500"></div>
+                 </div>
             </div>
         </div>
     );

@@ -17,12 +17,12 @@ export function TrackControls({ track }: TrackControlsProps) {
     const { updateTrack } = useAudioStore();
 
     return (
-        <div className="w-64 flex-shrink-0 flex flex-col p-3 border-r bg-card/50 gap-2">
+        <div className="w-64 flex-shrink-0 flex flex-col p-3 border-r border-zinc-800 bg-gradient-to-r from-zinc-900 to-zinc-800/50 gap-2 relative group">
             <div className="flex items-center gap-2 mb-1">
-                <div className={cn("w-3 h-8 rounded-full", LOOP_COLORS[track.type] || "bg-gray-500")} />
+                <div className={cn("w-1 h-8 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)]", LOOP_COLORS[track.type] || "bg-gray-500")} />
                 <div className="flex-1 overflow-hidden">
-                    <h3 className="font-bold text-sm truncate uppercase tracking-wider">{track.type}</h3>
-                    <p className="text-xs text-muted-foreground truncate" title={track.loopId}>{track.loopId}</p>
+                    <h3 className="font-bold text-xs truncate uppercase tracking-widest text-zinc-400 group-hover:text-zinc-200 transition-colors">{track.type}</h3>
+                    <p className="text-[10px] text-zinc-600 truncate font-mono" title={track.loopId}>{track.loopId}</p>
                 </div>
             </div>
             
@@ -31,15 +31,10 @@ export function TrackControls({ track }: TrackControlsProps) {
                     size="sm" 
                     pressed={track.muted} 
                     onPressedChange={(m) => updateTrack(track.id, { muted: m })}
-                    className="h-7 w-7 p-0 data-[state=on]:bg-red-500/20 data-[state=on]:text-red-500"
+                    className="h-6 w-6 p-0 rounded-sm bg-zinc-800 border border-zinc-700 data-[state=on]:bg-red-500/20 data-[state=on]:border-red-500 data-[state=on]:text-red-500 text-zinc-500 hover:text-zinc-300 transition-all shadow-sm"
                 >
-                    M
+                    <span className="text-[10px] font-bold">M</span>
                 </Toggle>
-                {/* Solo logic requires managing a solo state globally or checking other tracks. 
-                    For MVP, let's skip complex Solo logic or implement it later.
-                    We will leave the button as a placeholder or simple local toggle that doesn't enforce exclusive solo properly without global awareness 
-                    (which we have in store, but requires 'soloed' property on all tracks).
-                */}
                 
                 <Slider 
                     value={[track.volume]}
@@ -47,21 +42,21 @@ export function TrackControls({ track }: TrackControlsProps) {
                     max={1}
                     step={0.01}
                     onValueChange={(v) => updateTrack(track.id, { volume: v[0] })}
-                    className="flex-1"
+                    className="flex-1 [&>.absolute]:bg-zinc-700 [&_span]:bg-zinc-400 [&_span]:border-zinc-800"
                 />
             </div>
             
-             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                 <span>Pitch</span>
+             <div className="flex items-center gap-2 text-[10px] text-zinc-600 font-mono">
+                 <span>PITCH</span>
                  <Slider 
                     value={[track.pitch]} 
                     min={-12} 
                     max={12} 
                     step={1}
                     onValueChange={(v) => updateTrack(track.id, { pitch: v[0] })} 
-                    className="flex-1"
+                    className="flex-1 [&>.absolute]:bg-zinc-700 [&_span]:h-3 [&_span]:w-3 [&_span]:bg-zinc-500"
                 />
-                <span className="w-6 text-right">{track.pitch > 0 ? '+' : ''}{track.pitch}</span>
+                <span className="w-6 text-right text-zinc-400">{track.pitch > 0 ? '+' : ''}{track.pitch}</span>
              </div>
         </div>
     );
