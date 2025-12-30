@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { LOOP_COLORS } from '@/lib/audioUtils';
 
 const PIXELS_PER_BAR = 120;
-const TOTAL_BARS = 32; // Fixed canvas size for prototype
+const TOTAL_BARS = 128; // ~4 minutes at 120bpm
 
 export function Timeline() {
     const { project, currentBar, updateTrack } = useAudioStore();
@@ -67,7 +67,7 @@ export function Timeline() {
             );
             if (!isOccupied) {
                 updateTrack(trackId, {
-                    clips: [...track.clips, { startBar: clickedBar, durationBars: 1 }]
+                    clips: [...track.clips, { startBar: clickedBar, durationBars: 1, notes: [] }]
                 });
             }
         }
@@ -145,7 +145,7 @@ export function Timeline() {
                                         title="Drag to move, Shift+Click or Right Click to delete"
                                     >
                                         <div className="relative z-10 text-white/90 text-[10px] font-bold pointer-events-none truncate px-2 drop-shadow-md">
-                                            {track.loopId}
+                                            {track.instrument?.type || "Clip"}
                                         </div>
                                     </div>
                                 ))}

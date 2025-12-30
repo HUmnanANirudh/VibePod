@@ -22,7 +22,7 @@ export function TrackControls({ track }: TrackControlsProps) {
                 <div className={cn("w-1 h-8 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)]", LOOP_COLORS[track.type] || "bg-gray-500")} />
                 <div className="flex-1 overflow-hidden">
                     <h3 className="font-bold text-xs truncate uppercase tracking-widest text-zinc-400 group-hover:text-zinc-200 transition-colors">{track.type}</h3>
-                    <p className="text-[10px] text-zinc-600 truncate font-mono" title={track.loopId}>{track.loopId}</p>
+                    <p className="text-[10px] text-zinc-600 truncate font-mono" title={track.instrument?.type}>{track.instrument?.type}</p>
                 </div>
             </div>
             
@@ -45,19 +45,6 @@ export function TrackControls({ track }: TrackControlsProps) {
                     className="flex-1 [&>.absolute]:bg-zinc-700 [&_span]:bg-zinc-400 [&_span]:border-zinc-800"
                 />
             </div>
-            
-             <div className="flex items-center gap-2 text-[10px] text-zinc-600 font-mono">
-                 <span>PITCH</span>
-                 <Slider 
-                    value={[track.pitch]} 
-                    min={-12} 
-                    max={12} 
-                    step={1}
-                    onValueChange={(v) => updateTrack(track.id, { pitch: v[0] })} 
-                    className="flex-1 [&>.absolute]:bg-zinc-700 [&_span]:h-3 [&_span]:w-3 [&_span]:bg-zinc-500"
-                />
-                <span className="w-6 text-right text-zinc-400">{track.pitch > 0 ? '+' : ''}{track.pitch}</span>
-             </div>
         </div>
     );
 }

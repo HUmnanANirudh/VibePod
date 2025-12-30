@@ -25,7 +25,10 @@ export function AIPrompt() {
                 body: JSON.stringify({ prompt })
             });
             
-            if (!res.ok) throw new Error('Generation failed');
+            if (!res.ok) {
+  const errorData = await res.json();
+  throw new Error(errorData.error || 'Generation failed');
+}
             
             const data = await res.json();
             // Validate
