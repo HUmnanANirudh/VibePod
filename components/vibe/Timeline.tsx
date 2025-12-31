@@ -11,6 +11,7 @@ export function Timeline() {
     const { project, currentBar, updateTrack, seekTo } = useAudioStore();
     const [draggingClip, setDraggingClip] = useState<{ trackId: string, clipIndex: number, startX: number, originalStartBar: number } | null>(null);
     const [draggingPlayhead, setDraggingPlayhead] = useState<{ startX: number, originalBar: number } | null>(null);
+    const [playheadPreview, setPlayheadPreview] = useState<number | null>(null);
 
     if (!project) return <div className="p-10 text-center">No Project Loaded</div>;
 
@@ -34,7 +35,7 @@ export function Timeline() {
             if (newBar < 0) newBar = 0;
             if (newBar >= TOTAL_BARS) newBar = TOTAL_BARS - 1;
             
-            seekTo(newBar);
+            setPlayheadPreview(newBar);
             return;
         }
 
@@ -64,8 +65,13 @@ export function Timeline() {
     };
 
     const handleMouseUp = () => {
+        // Commit playhead position on mouse up
+        if (draggingPlayhead && playheadPreview !== null) {
+            seekTo(playheadPreview);
+        }
         setDraggingClip(null);
         setDraggingPlayhead(null);
+        setPlayheadPreview(null);
     };
 
     const handlePlayheadMouseDown = (e: React.MouseEvent) => {
@@ -74,6 +80,43 @@ export function Timeline() {
             startX: e.clientX,
             originalBar: currentBar
         });
+    };
+
+    const handleDrop = (e: React.DragEvent, trackId: string) => {
+        e.preventDefault();
+        const soundData = e.dataTransfer.getData('application/json');
+        if (!soundData) return;
+        
+        try {
+            const sound = JSON.parse(soundData);
+            const bounds = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - bounds.left;
+            const dropBar = Math.floor(x / PIXELS_PER_BAR);
+            
+            const track = project.tracks.find(t => t.id === trackId);
+            if (track) {
+                // Check if position is occupied
+                const isOccupied = track.clips.some(c => 
+                    (dropBar >= c.startBar && dropBar < c.startBar + c.durationBars)
+                );
+                if (!isOccupied) {
+                    updateTrack(trackId, {
+                        clips: [...track.clips, { 
+                            startBar: dropBar, 
+                            durationBars: 2, 
+                            notes: []
+                        }]
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Failed to parse sound data:', error);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
     };
 
     const handleTrackClick = (trackId: string, e: React.MouseEvent) => {
@@ -141,6 +184,8 @@ export function Timeline() {
                          <div 
                             className="relative h-24 flex-1 w-md bg-zinc-900/20" 
                             onClick={(e) => handleTrackClick(track.id, e)}
+                            onDrop={(e) => handleDrop(e, track.id)}
+                            onDragOver={handleDragOver}
                          >
                                 {/* Grid Lines */}
                                 <div className="absolute inset-0 flex pointer-events-none">
@@ -182,7 +227,7 @@ export function Timeline() {
                         "absolute top-8 bottom-0 w-0.5 bg-cyan-500 z-20 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] cursor-grab active:cursor-grabbing",
                         draggingPlayhead ? "" : "transition-all duration-75"
                     )}
-                    style={{ left: 256 + (currentBar * PIXELS_PER_BAR) }}
+                    style={{ left: 256 + ((playheadPreview !== null ? playheadPreview : currentBar) * PIXELS_PER_BAR) }}
                     onMouseDown={handlePlayheadMouseDown}
                     title="Drag to scrub timeline"
                  >
