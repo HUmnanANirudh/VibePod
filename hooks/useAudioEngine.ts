@@ -164,6 +164,18 @@ export function useAudioEngine() {
         }
     }, [isPlaying]);
 
+    // Handling Seek Requests
+    const { seekRequest } = useAudioStore();
+    const lastSeekTimestamp = useRef<number>(0);
+
+    useEffect(() => {
+        if (seekRequest && seekRequest.timestamp > lastSeekTimestamp.current) {
+            lastSeekTimestamp.current = seekRequest.timestamp;
+            Tone.getTransport().position = `${seekRequest.bar}:0:0`;
+            console.log(`Seeked to bar: ${seekRequest.bar}`);
+        }
+    }, [seekRequest]);
+
     // Update Progress
     useEffect(() => {
         const interval = setInterval(() => {

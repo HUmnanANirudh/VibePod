@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Play, Square, Pause } from 'lucide-react';
+import { Play, Square, Pause, SkipBack, SkipForward } from 'lucide-react';
 import { getContext, start } from 'tone';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -13,13 +13,15 @@ interface TransportProps {
 }
 
 export function Transport({ initAudio }: TransportProps) {
-    const { isPlaying, setIsPlaying, project, setProject, currentBar, resetProject } = useAudioStore();
+    const { isPlaying, setIsPlaying, project, setProject, currentBar, resetProject, seekTo } = useAudioStore();
     
     // Format bars:beats:sixteenths
     const formatTime = (totalBars: number) => {
-        const bars = Math.floor(totalBars);
-        const beats = Math.floor((totalBars - bars) * 4);
-        return `${bars}:${beats}`;
+        const bars = Math.floor(totalBars).toString().padStart(2, '0');
+        const beats = Math.floor((totalBars % 1) * 4).toString();
+        // and sixteenths... 
+        const sixteenths = Math.floor(((totalBars % 1) * 4 % 1) * 4).toString();
+        return `${bars}:${beats}:${sixteenths}`;
     };
 
     const [audioState, setAudioState] = React.useState<string>('suspended');
@@ -38,15 +40,25 @@ export function Transport({ initAudio }: TransportProps) {
 
     const stop = () => {
         setIsPlaying(false);
-        // We might want to reset transport to 0 here (not in store yet, implemented in engine listener?)
-        // In a real app we'd command the engine to seek. 
-        // For now, pause is fine, or we can add seek action.
+        seekTo(0);
+    };
+
+    const skipForward = () => {
+        seekTo(Math.min(96, currentBar + 8));
+    };
+
+    const skipBackward = () => {
+        seekTo(Math.max(0, currentBar - 8));
     };
     
     const handleBpmChange = (val: number[]) => {
         if (project) {
             setProject({ ...project, bpm: val[0] });
         }
+    };
+
+    const handleSeek = (val: number[]) => {
+        seekTo(val[0]);
     };
 
     return (
@@ -64,34 +76,59 @@ export function Transport({ initAudio }: TransportProps) {
 
             <div className="flex items-center gap-8">
                 {/* Time Display - Looks like a vintage LED or digital readout */}
-                <div className="font-mono text-xl w-32 text-center border-2 border-zinc-700 rounded bg-black/80 p-1 text-cyan-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] relative overflow-hidden group">
-                     {/* Glass Reflection */}
-                     <div className="absolute top-0 left-0 right-0 h-[50%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
-                    {formatTime(currentBar)}
+                <div className="group relative">
+                    <div className="font-mono text-xl w-36 text-center border-2 border-zinc-700 rounded bg-black/80 p-1 text-cyan-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] relative overflow-hidden">
+                        {/* Glass Reflection */}
+                        <div className="absolute top-0 left-0 right-0 h-[50%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
+                        {formatTime(currentBar)}
+                    </div>
+                    {/* Hover tooltip or label */}
+                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-[9px] font-bold text-zinc-500 uppercase tracking-widest pointer-events-none">
+                        Transport Position
+                    </div>
                 </div>
                 
                 {/* Transport Controls - Metallic Buttons */}
-                <div className="flex items-center gap-4 bg-zinc-900/50 p-2 rounded-full border border-zinc-700/50 shadow-inner">
+                <div className="flex items-center gap-2 bg-black/40 p-2 rounded-full border border-zinc-700/50 shadow-inner">
+                    <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-8 w-8 rounded-full text-zinc-600 hover:text-white hover:bg-white/10"
+                        onClick={skipBackward}
+                    >
+                        <SkipBack className="h-4 w-4 fill-current" />
+                    </Button>
+
                     <Button 
                         size="icon" 
                         variant="default"
                         className={cn(
-                            "h-14 w-14 rounded-full border-4 border-zinc-800 shadow-[2px_2px_5px_rgba(0,0,0,0.5),-1px_-1px_2px_rgba(255,255,255,0.1)] transition-all active:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.8)] active:translate-y-0.5",
+                            "h-14 w-14 mx-2 rounded-full border-4 border-zinc-800 shadow-[2px_2px_5px_rgba(0,0,0,0.5),-1px_-1px_2px_rgba(255,255,255,0.1)] transition-all active:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.8)] active:translate-y-0.5 overflow-hidden group",
                             isPlaying 
                                 ? "bg-gradient-to-br from-amber-400 to-orange-600 hover:from-amber-500 hover:to-orange-700 text-white" 
                                 : "bg-gradient-to-br from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-zinc-400 hover:text-green-400"
                         )}
                         onClick={togglePlay}
                     >
-                        {isPlaying ? <Pause className="fill-current h-6 w-6 filter drop-shadow-md" /> : <Play className="fill-current h-6 w-6 ml-1 filter drop-shadow-md" />}
+                        {isPlaying ? <Pause className="fill-current h-6 w-6" /> : <Play className="fill-current h-6 w-6 ml-1" />}
                     </Button>
+
                     <Button 
                         size="icon" 
                         variant="ghost" 
-                        className="h-10 w-10 rounded-full bg-zinc-800 border-2 border-zinc-700 text-zinc-500 hover:text-red-500 hover:bg-zinc-750 shadow-md active:shadow-inner active:translate-y-px"
+                        className="h-10 w-10 rounded-full bg-zinc-800 border-2 border-zinc-700 text-zinc-500 hover:text-red-500 hover:bg-zinc-700 shadow-md active:shadow-inner active:translate-y-px"
                         onClick={stop}
                     >
-                        <Square className="h-4 w-4 fill-current" />
+                        <Square className="h-3 w-3 fill-current" />
+                    </Button>
+
+                    <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-8 w-8 rounded-full text-zinc-600 hover:text-white hover:bg-white/10"
+                        onClick={skipForward}
+                    >
+                        <SkipForward className="h-4 w-4 fill-current" />
                     </Button>
                 </div>
 
