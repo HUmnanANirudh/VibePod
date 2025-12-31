@@ -16,15 +16,10 @@ export default function Home() {
       <Transport initAudio={initAudio} />
       <div className="flex flex-1 overflow-hidden">
         <SoundBrowser />
-
-        {/* Workspace */}
         <div className="flex-1 flex flex-col min-w-0 bg-[#121214]">
-            {/* Top Rack for AI */}
             <div className="p-4 border-b border-zinc-800 bg-[#18181b] shadow-lg z-10">
                  <AIPrompt />
             </div>
-
-            {/* Timeline */}
             <div className="flex-1 overflow-hidden flex flex-col relative">
                 {project && project.tracks.length > 0 ? (
                     <Timeline />

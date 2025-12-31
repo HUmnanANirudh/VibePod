@@ -150,7 +150,6 @@ export function useAudioEngine() {
                             break;
                         case 'Vibrato':
                             node = new Tone.Vibrato(5, 0.1);
-                            node.start(); // Start the LFO
                             break;
                         case 'PingPongDelay': node = new Tone.PingPongDelay(fx.options?.delayTime || "8n", 0.3); break;
                         case 'JCReverb': node = new Tone.JCReverb(0.4); break;
