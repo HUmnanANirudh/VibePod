@@ -8,8 +8,9 @@ const PIXELS_PER_BAR = 120;
 const TOTAL_BARS = 128; // ~4 minutes at 120bpm
 
 export function Timeline() {
-    const { project, currentBar, updateTrack } = useAudioStore();
+    const { project, currentBar, updateTrack, seekTo } = useAudioStore();
     const [draggingClip, setDraggingClip] = useState<{ trackId: string, clipIndex: number, startX: number, originalStartBar: number } | null>(null);
+    const [draggingPlayhead, setDraggingPlayhead] = useState<{ startX: number, originalBar: number } | null>(null);
 
     if (!project) return <div className="p-10 text-center">No Project Loaded</div>;
 
@@ -24,6 +25,20 @@ export function Timeline() {
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
+        // Handle playhead dragging
+        if (draggingPlayhead) {
+            const deltaX = e.clientX - draggingPlayhead.startX;
+            const deltaBars = Math.round(deltaX / PIXELS_PER_BAR);
+            
+            let newBar = draggingPlayhead.originalBar + deltaBars;
+            if (newBar < 0) newBar = 0;
+            if (newBar >= TOTAL_BARS) newBar = TOTAL_BARS - 1;
+            
+            seekTo(newBar);
+            return;
+        }
+
+        // Handle clip dragging
         if (!draggingClip) return;
         const deltaX = e.clientX - draggingClip.startX;
         const deltaBars = Math.round(deltaX / PIXELS_PER_BAR);
@@ -50,6 +65,15 @@ export function Timeline() {
 
     const handleMouseUp = () => {
         setDraggingClip(null);
+        setDraggingPlayhead(null);
+    };
+
+    const handlePlayheadMouseDown = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setDraggingPlayhead({
+            startX: e.clientX,
+            originalBar: currentBar
+        });
     };
 
     const handleTrackClick = (trackId: string, e: React.MouseEvent) => {
@@ -98,11 +122,11 @@ export function Timeline() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
         >
-            <div className="flex flex-col min-w-[max-content]">
+            <div className="flex flex-col min-w-max">
                  {/* Ruler */}
                  <div className="flex h-8 border-b border-zinc-800 pl-64 sticky top-0 bg-zinc-900/90 backdrop-blur z-10 w-full shadow-lg">
                      {Array.from({ length: TOTAL_BARS }).map((_, i) => (
-                         <div key={i} className="flex-shrink-0 border-l border-zinc-700/50 px-1 text-[10px] font-mono text-zinc-500" style={{ width: PIXELS_PER_BAR }}>
+                         <div key={i} className="shrink border-l border-zinc-700/50 px-1 text-[10px] font-mono text-zinc-500" style={{ width: PIXELS_PER_BAR }}>
                              {i + 1}
                          </div>
                      ))}
@@ -115,13 +139,13 @@ export function Timeline() {
                          
                          {/* Lane */}
                          <div 
-                            className="relative h-24 flex-1 w-[3840px] bg-zinc-900/20" 
+                            className="relative h-24 flex-1 w-md bg-zinc-900/20" 
                             onClick={(e) => handleTrackClick(track.id, e)}
                          >
                                 {/* Grid Lines */}
                                 <div className="absolute inset-0 flex pointer-events-none">
                                      {Array.from({ length: TOTAL_BARS }).map((_, i) => (
-                                         <div key={i} className="flex-shrink-0 border-r border-dashed border-zinc-800/30 h-full" style={{ width: PIXELS_PER_BAR }}></div>
+                                         <div key={i} className="shrink border-r border-dashed border-zinc-800/30 h-full" style={{ width: PIXELS_PER_BAR }}></div>
                                      ))}
                                 </div>
                                 
@@ -130,10 +154,9 @@ export function Timeline() {
                                     <div
                                         key={`${clip.startBar}-${idx}`}
                                         className={cn(
-                                            "absolute top-1 bottom-1 rounded border-t border-white/20 border-b border-black/40 shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center overflow-hidden",
+                                            "absolute top-1 bottom-1 rounded border-t border-white/20 border-b shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center overflow-hidden",
                                             LOOP_COLORS[track.type] || "bg-zinc-700",
-                                            "after:absolute after:inset-0 after:bg-gradient-to-b after:from-white/10 after:to-transparent hover:brightness-110 transition-all",
-                                            // Add a metallic sheen or striping if desired
+                                            "after:absolute after:inset-0 after:bg-linear-to-b after:from-white/10 after:to-transparent hover:brightness-110 transition-all",
                                         )}
                                         style={{
                                             left: clip.startBar * PIXELS_PER_BAR,
@@ -155,10 +178,15 @@ export function Timeline() {
                  
                  {/* Playhead */}
                  <div 
-                    className="absolute top-8 bottom-0 w-[2px] bg-cyan-500 z-20 pointer-events-none transition-all duration-75 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)]"
+                    className={cn(
+                        "absolute top-8 bottom-0 w-0.5 bg-cyan-500 z-20 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] cursor-grab active:cursor-grabbing",
+                        draggingPlayhead ? "" : "transition-all duration-75"
+                    )}
                     style={{ left: 256 + (currentBar * PIXELS_PER_BAR) }}
+                    onMouseDown={handlePlayheadMouseDown}
+                    title="Drag to scrub timeline"
                  >
-                    <div className="absolute -top-1 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-cyan-500"></div>
+                    <div className="absolute -top-1 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-cyan-500 pointer-events-none"></div>
                  </div>
             </div>
         </div>
