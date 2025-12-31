@@ -21,7 +21,7 @@ export function useAudioEngine() {
     // Sync Project to Audio Engine
     useEffect(() => {
         if (!project) return;
-        
+
         // 1. Set BPM (Always safe to update)
         if (Tone.getTransport().bpm.value !== project.bpm) {
             Tone.getTransport().bpm.value = project.bpm;
@@ -42,13 +42,13 @@ export function useAudioEngine() {
         if (structureChanged) {
             console.log("Structure changed, rebuilding schedule...");
             structureHashRef.current = currentStructureHash;
-            
+
             // Cancel old schedule
             Tone.getTransport().cancel();
 
             // Cleanup unused tracks
             const trackIds = new Set(project.tracks.map(t => t.id));
-            
+
             // Dispose synths, channels, and parts for removed tracks
             synthsRef.current.forEach((synth, id) => {
                 if (!trackIds.has(id)) {
@@ -78,22 +78,22 @@ export function useAudioEngine() {
         project.tracks.forEach(track => {
             let synth = synthsRef.current.get(track.id);
             let channel = channelRef.current.get(track.id);
-            
+
             // A. Create/Ensure Channel
             if (!channel) {
                 channel = new Tone.Channel().toDestination();
                 channelRef.current.set(track.id, channel);
             }
-            
+
             // B. Update Parameters (ALWAYS update these)
             // Ramp to value to prevent clicking
             channel.volume.rampTo(Tone.gainToDb(track.volume), 0.1);
             channel.mute = track.muted;
-            
+
             // C. Create/Ensure Synth
             const type = track.instrument?.type || 'Synth';
             const currentStoredType = synthTypesRef.current.get(track.id);
-            
+
             // If synth exists but type changed, dispose and recreate
             if (synth && currentStoredType !== type) {
                 console.log(`Instrument type changed for track ${track.id} from ${currentStoredType} to ${type}. Recreating...`);
@@ -141,26 +141,26 @@ export function useAudioEngine() {
 
                 // Sort notes by time to satisfy Tone.Part's requirement
                 allNotes.sort((a, b) => a.time - b.time);
-                
+
                 // Add sorted notes to the part
                 allNotes.forEach(({ time, note }) => {
                     part?.add(time, note);
                 });
             }
         });
-        
+
     }, [project]);
 
     // Handling Playback State
     useEffect(() => {
         if (isPlaying) {
             if (Tone.getTransport().state !== 'started') {
-                 Tone.getTransport().start();
+                Tone.getTransport().start();
             }
         } else {
-             if (Tone.getTransport().state === 'started') {
-                 Tone.getTransport().pause();
-             }
+            if (Tone.getTransport().state === 'started') {
+                Tone.getTransport().pause();
+            }
         }
     }, [isPlaying]);
 
@@ -172,7 +172,7 @@ export function useAudioEngine() {
                 const bars = parseInt(position[0]);
                 const beats = parseInt(position[1]);
                 const sixteenths = parseFloat(position[2]);
-                setCurrentBar(bars + beats/4 + sixteenths/16);
+                setCurrentBar(bars + beats / 4 + sixteenths / 16);
             }
         }, 100);
         return () => clearInterval(interval);
@@ -180,3 +180,4 @@ export function useAudioEngine() {
 
     return { initAudio };
 }
+

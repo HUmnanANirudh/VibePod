@@ -3,7 +3,6 @@ import { useAudioEngine } from '@/hooks/useAudioEngine';
 import { Transport } from '@/components/vibe/Transport';
 import { Timeline } from '@/components/vibe/Timeline';
 import { AIPrompt } from '@/components/vibe/AIPrompt';
-import { MOCK_LOOPS } from '@/lib/audioUtils';
 import { useAudioStore } from '@/store/useAudioStore';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Music4 } from 'lucide-react';
@@ -41,7 +40,7 @@ export default function Home() {
                  <div className="px-2 py-1 text-[9px] font-bold text-zinc-600 uppercase bg-zinc-900/50 border-b border-zinc-800">
                     Local / Loops
                  </div>
-                 {Object.keys(MOCK_LOOPS).map((loopId, i) => (
+                 {/* {Object.keys(MOCK_LOOPS).map((loopId, i) => (
                      <div 
                         key={loopId} 
                         className="group flex items-center gap-2 px-3 py-1.5 hover:bg-cyan-900/20 hover:text-cyan-400 text-zinc-400 cursor-grab active:cursor-grabbing border-b border-zinc-800/50 text-[11px] font-mono transition-colors"
@@ -52,7 +51,7 @@ export default function Home() {
                          <span className="truncate">{loopId}</span>
                          <span className="ml-auto text-zinc-700 text-[9px]">WAV</span>
                      </div>
-                 ))}
+                 ))} */}
                  
                  {/* Fake folders to make it look populated */}
                  {['Drums', 'Bass', 'Synths', 'FX', 'Vocals'].map(folder => (
@@ -65,7 +64,7 @@ export default function Home() {
           
           {/* Info Footer for Browser */}
           <div className="h-6 bg-zinc-900 border-t border-black flex items-center px-2 text-[9px] text-zinc-600 font-mono">
-              {Object.keys(MOCK_LOOPS).length} ITEMS // READY
+              {/* {Object.keys(MOCK_LOOPS).length} ITEMS // READY */}
           </div>
         </div>
 

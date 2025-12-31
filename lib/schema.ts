@@ -1,13 +1,17 @@
 import { z } from "zod";
 
+/* ---------------- NOTES ---------------- */
+
 export const NoteSchema = z.object({
-  pitch: z.string(), // e.g., "C4", "A#3"
-  startTime: z.string(), // "0:0:0" format or "4n"
-  duration: z.string(), // "8n", "1m"
+  pitch: z.string(),              // "C4"
+  startTime: z.string(),          // "0:0"
+  duration: z.string(),           // "4n", "1:0"
   velocity: z.number().min(0).max(1).optional(),
 });
 
 export type Note = z.infer<typeof NoteSchema>;
+
+/* ---------------- CLIPS ---------------- */
 
 export const ClipSchema = z.object({
   startBar: z.number().int().min(0),
@@ -17,10 +21,20 @@ export const ClipSchema = z.object({
 
 export type Clip = z.infer<typeof ClipSchema>;
 
+/* ---------------- INSTRUMENT ---------------- */
+
 export const InstrumentSchema = z.object({
-  type: z.enum(["Synth", "MembraneSynth", "MetalSynth", "FMSynth", "AMSynth"]),
-  options: z.any().optional(), // Flexible for synth params
+  type: z.enum([
+    "Synth",
+    "MembraneSynth",
+    "MetalSynth",
+    "FMSynth",
+    "AMSynth",
+  ]),
+  options: z.any().optional(),
 });
+
+/* ---------------- TRACK ---------------- */
 
 export const TrackSchema = z.object({
   id: z.string(),
@@ -33,9 +47,34 @@ export const TrackSchema = z.object({
 
 export type Track = z.infer<typeof TrackSchema>;
 
+/* ---------------- PROJECT ---------------- */
+
 export const ProjectSchema = z.object({
   bpm: z.number().min(60).max(160),
   tracks: z.array(TrackSchema),
 });
 
 export type Project = z.infer<typeof ProjectSchema>;
+export const HarmonySchema = z.object({
+  key: z.enum(["C", "D", "E", "F", "G", "A", "B"]),
+  scale: z.enum(["major", "minor"]),
+});
+
+export const SectionSchema = z.object({
+  name: z.string(),
+  bars: z.number(),
+  chords: z.array(
+    z.enum(["i", "iv", "v", "VI", "VII"])
+  ),
+  energy: z.enum(["low", "mid", "high"]),
+});
+
+
+export const AIPatternSchema = z.object({
+  bpm: z.number().min(90).max(150),
+  harmony: HarmonySchema,
+  seed: z.number(),
+  sections: z.array(SectionSchema),
+});
+
+export type AIPattern = z.infer<typeof AIPatternSchema>;
