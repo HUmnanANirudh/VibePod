@@ -21,7 +21,12 @@ export function TrackControls({ track }: TrackControlsProps) {
             <div className="flex items-center gap-2 mb-1">
                 <div className={cn("w-1 h-8 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)]", LOOP_COLORS[track.type] || "bg-gray-500")} />
                 <div className="flex-1 overflow-hidden">
-                    <h3 className="font-bold text-xs truncate uppercase tracking-widest text-zinc-400 group-hover:text-zinc-200 transition-colors">{track.type}</h3>
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-xs truncate uppercase tracking-widest text-zinc-400 group-hover:text-zinc-200 transition-colors">{track.type}</h3>
+                        {track.effects && track.effects.length > 0 && (
+                            <span className="text-[8px] bg-cyan-500/20 text-cyan-400 px-1 rounded border border-cyan-500/30 font-bold animate-pulse">FX</span>
+                        )}
+                    </div>
                     <p className="text-[10px] text-zinc-600 truncate font-mono" title={track.instrument?.type}>{track.instrument?.type}</p>
                 </div>
             </div>

@@ -26,13 +26,46 @@ export type Clip = z.infer<typeof ClipSchema>;
 export const InstrumentSchema = z.object({
   type: z.enum([
     "Synth",
+    "AMSynth",
+    "FMSynth",
+    "DuoSynth",
+    "MonoSynth",
     "MembraneSynth",
     "MetalSynth",
-    "FMSynth",
-    "AMSynth",
+    "PluckSynth",
+    "NoiseSynth",
   ]),
   options: z.any().optional(),
 });
+
+/* ---------------- EFFECTS ---------------- */
+
+export const EffectSchema = z.object({
+  type: z.enum([
+    "Distortion",
+    "Reverb",
+    "Chorus",
+    "FeedbackDelay",
+    "Phaser",
+    "BitCrusher",
+    "AutoFilter",
+    "AutoWah",
+    "Tremolo",
+    "Vibrato",
+    "PingPongDelay",
+    "JCReverb",
+    "Freeverb",
+    "PitchShift",
+    "Chebyshev",
+    "StereoWidener",
+    "AutoPanner",
+    "FrequencyShifter",
+  ]),
+  wet: z.number().min(0).max(1),
+  options: z.any().optional(),
+});
+
+export type Effect = z.infer<typeof EffectSchema>;
 
 /* ---------------- TRACK ---------------- */
 
@@ -40,6 +73,7 @@ export const TrackSchema = z.object({
   id: z.string(),
   type: z.enum(["drums", "bass", "melody", "pad", "fx"]),
   instrument: InstrumentSchema,
+  effects: z.array(EffectSchema).default([]),
   volume: z.number().min(0).max(1),
   muted: z.boolean(),
   clips: z.array(ClipSchema),

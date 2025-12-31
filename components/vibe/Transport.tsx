@@ -34,8 +34,20 @@ export function Transport({ initAudio }: TransportProps) {
     }, []);
 
     const togglePlay = async () => {
-        await initAudio(); // Ensure context is started
-        setIsPlaying(!isPlaying);
+        try {
+            // Explicitly start Tone.js (required for browser autoplay policy)
+            await start();
+            await initAudio();
+            
+            // Ensure AudioContext is running
+            if (getContext().state !== 'running') {
+                await getContext().resume();
+            }
+            
+            setIsPlaying(!isPlaying);
+        } catch (error) {
+            console.error('Failed to start audio:', error);
+        }
     };
 
     const stop = () => {
