@@ -55,26 +55,3 @@ export const ProjectSchema = z.object({
 });
 
 export type Project = z.infer<typeof ProjectSchema>;
-export const HarmonySchema = z.object({
-  key: z.enum(["C", "D", "E", "F", "G", "A", "B"]),
-  scale: z.enum(["major", "minor"]),
-});
-
-export const SectionSchema = z.object({
-  name: z.string(),
-  bars: z.number(),
-  chords: z.array(
-    z.enum(["i", "iv", "v", "VI", "VII"])
-  ),
-  energy: z.enum(["low", "mid", "high"]),
-});
-
-
-export const AIPatternSchema = z.object({
-  bpm: z.number().min(90).max(150),
-  harmony: HarmonySchema,
-  seed: z.number(),
-  sections: z.array(SectionSchema),
-});
-
-export type AIPattern = z.infer<typeof AIPatternSchema>;
