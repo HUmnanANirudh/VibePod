@@ -201,6 +201,138 @@ export const SOUND_LIBRARY: Record<string, SoundPreset[]> = {
                 noise: { type: 'pink' },
                 envelope: { attack: 0.001, decay: 0.15, sustain: 0 }
             }
+        },
+        {
+            id: 'clap-reverb',
+            name: 'Reverb Clap',
+            category: 'Drums',
+            subcategory: 'Clap',
+            instrumentType: 'NoiseSynth',
+            trackType: 'drums',
+            previewNote: 'C2',
+            previewDuration: '4n',
+            settings: {
+                noise: { type: 'pink' },
+                envelope: { attack: 0.001, decay: 0.3, sustain: 0.1, release: 0.4 }
+            }
+        },
+        {
+            id: 'clap-stutter',
+            name: 'Stutter Clap',
+            category: 'Drums',
+            subcategory: 'Clap',
+            instrumentType: 'NoiseSynth',
+            trackType: 'drums',
+            previewNote: 'C2',
+            previewDuration: '8n',
+            settings: {
+                noise: { type: 'pink' },
+                envelope: { attack: 0.001, decay: 0.08, sustain: 0 }
+            }
+        },
+        // Toms
+        {
+            id: 'tom-high',
+            name: 'High Tom',
+            category: 'Drums',
+            subcategory: 'Tom',
+            instrumentType: 'MembraneSynth',
+            trackType: 'drums',
+            previewNote: 'C3',
+            previewDuration: '8n',
+            settings: {
+                pitchDecay: 0.04,
+                octaves: 4,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.2 }
+            }
+        },
+        {
+            id: 'tom-mid',
+            name: 'Mid Tom',
+            category: 'Drums',
+            subcategory: 'Tom',
+            instrumentType: 'MembraneSynth',
+            trackType: 'drums',
+            previewNote: 'G2',
+            previewDuration: '8n',
+            settings: {
+                pitchDecay: 0.05,
+                octaves: 5,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.001, decay: 0.4, sustain: 0, release: 0.3 }
+            }
+        },
+        {
+            id: 'tom-floor',
+            name: 'Floor Tom',
+            category: 'Drums',
+            subcategory: 'Tom',
+            instrumentType: 'MembraneSynth',
+            trackType: 'drums',
+            previewNote: 'C2',
+            previewDuration: '4n',
+            settings: {
+                pitchDecay: 0.08,
+                octaves: 6,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.001, decay: 0.6, sustain: 0, release: 0.5 }
+            }
+        },
+        // Cymbals
+        {
+            id: 'cymbal-crash',
+            name: 'Crash Cymbal',
+            category: 'Drums',
+            subcategory: 'Cymbal',
+            instrumentType: 'MetalSynth',
+            trackType: 'drums',
+            previewNote: 'C3',
+            previewDuration: '1n',
+            settings: {
+                frequency: 250,
+                envelope: { attack: 0.001, decay: 1.5, release: 2.0 },
+                harmonicity: 5.1,
+                modulationIndex: 32,
+                resonance: 4000,
+                octaves: 1.5
+            }
+        },
+        {
+            id: 'cymbal-ride',
+            name: 'Ride Cymbal',
+            category: 'Drums',
+            subcategory: 'Cymbal',
+            instrumentType: 'MetalSynth',
+            trackType: 'drums',
+            previewNote: 'C3',
+            previewDuration: '4n',
+            settings: {
+                frequency: 300,
+                envelope: { attack: 0.001, decay: 0.8, release: 1.0 },
+                harmonicity: 4,
+                modulationIndex: 28,
+                resonance: 3000,
+                octaves: 1.3
+            }
+        },
+        {
+            id: 'cymbal-china',
+            name: 'China Cymbal',
+            category: 'Drums',
+            subcategory: 'Cymbal',
+            instrumentType: 'MetalSynth',
+            trackType: 'drums',
+            previewNote: 'C3',
+            previewDuration: '2n',
+            settings: {
+                frequency: 200,
+                envelope: { attack: 0.001, decay: 1.2, release: 1.5 },
+                harmonicity: 6,
+                modulationIndex: 35,
+                resonance: 2500,
+                octaves: 1.8
+            }
         }
     ],
 
@@ -335,6 +467,56 @@ export const SOUND_LIBRARY: Record<string, SoundPreset[]> = {
                 attackNoise: 1.5,
                 dampening: 2000,
                 resonance: 0.85
+            }
+        },
+        {
+            id: 'bass-808-long',
+            name: '808 Long',
+            category: 'Bass',
+            subcategory: 'Sub',
+            instrumentType: 'MonoSynth',
+            trackType: 'bass',
+            previewNote: 'C2',
+            previewDuration: '2n',
+            settings: {
+                oscillator: { type: 'sine' },
+                filter: { Q: 2, type: 'lowpass', rolloff: -24 },
+                envelope: { attack: 0.001, decay: 0.5, sustain: 0.3, release: 1.5 },
+                filterEnvelope: { attack: 0.001, decay: 0.3, sustain: 0.2, release: 0.8, baseFrequency: 100, octaves: 2 }
+            }
+        },
+        {
+            id: 'bass-distorted',
+            name: 'Distorted Bass',
+            category: 'Bass',
+            subcategory: 'Aggressive',
+            instrumentType: 'MonoSynth',
+            trackType: 'bass',
+            previewNote: 'C2',
+            previewDuration: '4n',
+            settings: {
+                oscillator: { type: 'fatsawtooth' },
+                filter: { Q: 10, type: 'lowpass', rolloff: -24 },
+                envelope: { attack: 0.001, decay: 0.2, sustain: 0.4, release: 0.3 },
+                filterEnvelope: { attack: 0.001, decay: 0.3, sustain: 0.2, release: 0.2, baseFrequency: 150, octaves: 3 }
+            }
+        },
+        {
+            id: 'bass-rubbery',
+            name: 'Rubbery Bass',
+            category: 'Bass',
+            subcategory: 'Aggressive',
+            instrumentType: 'FMSynth',
+            trackType: 'bass',
+            previewNote: 'C2',
+            previewDuration: '4n',
+            settings: {
+                harmonicity: 0.5,
+                modulationIndex: 20,
+                oscillator: { type: 'square' },
+                envelope: { attack: 0.01, decay: 0.3, sustain: 0.3, release: 0.4 },
+                modulation: { type: 'sine' },
+                modulationEnvelope: { attack: 0.01, decay: 0.4, sustain: 0.2, release: 0.3 }
             }
         }
     ],
@@ -514,6 +696,72 @@ export const SOUND_LIBRARY: Record<string, SoundPreset[]> = {
                 oscillator: { type: 'sawtooth' },
                 envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 }
             }
+        },
+        {
+            id: 'synth-hoover',
+            name: 'Hoover',
+            category: 'Synths',
+            subcategory: 'Lead',
+            instrumentType: 'MonoSynth',
+            trackType: 'melody',
+            previewNote: 'C4',
+            previewDuration: '2n',
+            settings: {
+                oscillator: { type: 'fatsawtooth' },
+                filter: { Q: 8, type: 'lowpass', rolloff: -24 },
+                envelope: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.4 },
+                filterEnvelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.3, baseFrequency: 1000, octaves: 3 }
+            }
+        },
+        {
+            id: 'synth-trance',
+            name: 'Trance Lead',
+            category: 'Synths',
+            subcategory: 'Lead',
+            instrumentType: 'MonoSynth',
+            trackType: 'melody',
+            previewNote: 'C5',
+            previewDuration: '4n',
+            settings: {
+                oscillator: { type: 'square' },
+                filter: { Q: 6, type: 'lowpass', rolloff: -24 },
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0.5, release: 0.3 },
+                filterEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.2, baseFrequency: 2000, octaves: 2 }
+            }
+        },
+        {
+            id: 'synth-hardstyle',
+            name: 'Hardstyle Lead',
+            category: 'Synths',
+            subcategory: 'Lead',
+            instrumentType: 'FMSynth',
+            trackType: 'melody',
+            previewNote: 'C5',
+            previewDuration: '4n',
+            settings: {
+                harmonicity: 2,
+                modulationIndex: 25,
+                oscillator: { type: 'square' },
+                envelope: { attack: 0.001, decay: 0.2, sustain: 0.4, release: 0.3 },
+                modulation: { type: 'sawtooth' },
+                modulationEnvelope: { attack: 0.001, decay: 0.3, sustain: 0.3, release: 0.2 }
+            }
+        },
+        {
+            id: 'synth-dirty',
+            name: 'Dirty Synth',
+            category: 'Synths',
+            subcategory: 'Aggressive',
+            instrumentType: 'MonoSynth',
+            trackType: 'melody',
+            previewNote: 'C4',
+            previewDuration: '4n',
+            settings: {
+                oscillator: { type: 'fatsawtooth' },
+                filter: { Q: 12, type: 'lowpass', rolloff: -24 },
+                envelope: { attack: 0.005, decay: 0.15, sustain: 0.3, release: 0.2 },
+                filterEnvelope: { attack: 0.005, decay: 0.2, sustain: 0.2, release: 0.15, baseFrequency: 500, octaves: 4 }
+            }
         }
     ],
 
@@ -645,6 +893,48 @@ export const SOUND_LIBRARY: Record<string, SoundPreset[]> = {
                 envelope: { attack: 0.01, decay: 1.0, sustain: 0.5, release: 0.5 },
                 modulation: { type: 'sine' },
                 modulationEnvelope: { attack: 0.01, decay: 1.0, sustain: 0.8, release: 0.5 }
+            }
+        },
+        {
+            id: 'fx-explosion',
+            name: 'Explosion',
+            category: 'FX',
+            subcategory: 'Impact',
+            instrumentType: 'NoiseSynth',
+            trackType: 'drums',
+            previewNote: 'C1',
+            previewDuration: '2n',
+            settings: {
+                noise: { type: 'brown' },
+                envelope: { attack: 0.001, decay: 0.8, sustain: 0.2, release: 1.0 }
+            }
+        },
+        {
+            id: 'fx-woosh',
+            name: 'Woosh',
+            category: 'FX',
+            subcategory: 'Sweep',
+            instrumentType: 'NoiseSynth',
+            trackType: 'drums',
+            previewNote: 'C3',
+            previewDuration: '4n',
+            settings: {
+                noise: { type: 'pink' },
+                envelope: { attack: 0.01, decay: 0.5, sustain: 0 }
+            }
+        },
+        {
+            id: 'fx-radio',
+            name: 'Radio Static',
+            category: 'FX',
+            subcategory: 'Digital',
+            instrumentType: 'NoiseSynth',
+            trackType: 'ambient',
+            previewNote: 'C3',
+            previewDuration: '1n',
+            settings: {
+                noise: { type: 'white' },
+                envelope: { attack: 0.1, decay: 0.5, sustain: 0.5, release: 0.3 }
             }
         }
     ],
@@ -912,6 +1202,72 @@ export const SOUND_LIBRARY: Record<string, SoundPreset[]> = {
                 pitchDecay: 0.01,
                 octaves: 1.5,
                 envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.1 }
+            }
+        },
+        {
+            id: 'perc-tambourine',
+            name: 'Tambourine',
+            category: 'Percussion',
+            subcategory: 'Shaker',
+            instrumentType: 'MetalSynth',
+            trackType: 'drums',
+            previewNote: 'C4',
+            previewDuration: '32n',
+            settings: {
+                frequency: 250,
+                envelope: { attack: 0.001, decay: 0.1, release: 0.08 },
+                harmonicity: 8,
+                modulationIndex: 25,
+                resonance: 3500,
+                octaves: 1.5
+            }
+        },
+        {
+            id: 'perc-cowbell',
+            name: 'Cowbell',
+            category: 'Percussion',
+            subcategory: 'Bell',
+            instrumentType: 'MetalSynth',
+            trackType: 'drums',
+            previewNote: 'C4',
+            previewDuration: '16n',
+            settings: {
+                frequency: 540,
+                envelope: { attack: 0.001, decay: 0.15, release: 0.1 },
+                harmonicity: 2.1,
+                modulationIndex: 20,
+                resonance: 1500,
+                octaves: 1
+            }
+        },
+        {
+            id: 'perc-woodblock',
+            name: 'Woodblock',
+            category: 'Percussion',
+            subcategory: 'Wood',
+            instrumentType: 'MembraneSynth',
+            trackType: 'drums',
+            previewNote: 'C5',
+            previewDuration: '32n',
+            settings: {
+                pitchDecay: 0.005,
+                octaves: 1,
+                oscillator: { type: 'triangle' },
+                envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.03 }
+            }
+        },
+        {
+            id: 'perc-guiro',
+            name: 'Guiro',
+            category: 'Percussion',
+            subcategory: 'Scraper',
+            instrumentType: 'NoiseSynth',
+            trackType: 'drums',
+            previewNote: 'C4',
+            previewDuration: '8n',
+            settings: {
+                noise: { type: 'brown' },
+                envelope: { attack: 0.001, decay: 0.1, sustain: 0.05, release: 0.08 }
             }
         }
     ],
@@ -1683,6 +2039,405 @@ export const SOUND_LIBRARY: Record<string, SoundPreset[]> = {
                 oscillator: { type: 'square' },
                 envelope: { attack: 0.001, decay: 0.08, sustain: 0, release: 0.05 },
                 modulation: { type: 'sine' }
+            }
+        },
+        {
+            id: 'elec-lasergun',
+            name: 'Laser Gun',
+            category: 'Electronic',
+            subcategory: 'Game',
+            instrumentType: 'FMSynth',
+            trackType: 'melody',
+            previewNote: 'C6',
+            previewDuration: '16n',
+            settings: {
+                harmonicity: 5,
+                modulationIndex: 50,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.1 },
+                modulation: { type: 'square' }
+            }
+        },
+        {
+            id: 'elec-robotvoice',
+            name: 'Robot Voice',
+            category: 'Electronic',
+            subcategory: 'Vocal',
+            instrumentType: 'AMSynth',
+            trackType: 'melody',
+            previewNote: 'C3',
+            previewDuration: '4n',
+            settings: {
+                harmonicity: 1.5,
+                oscillator: { type: 'square' },
+                envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 },
+                modulation: { type: 'sawtooth' },
+                modulationEnvelope: { attack: 0.05, decay: 0.1, sustain: 0.7, release: 0.2 }
+            }
+        }
+    ],
+
+    'Guitars': [
+        {
+            id: 'guitar-electric-clean',
+            name: 'Electric Clean',
+            category: 'Guitars',
+            subcategory: 'Electric',
+            instrumentType: 'PluckSynth',
+            trackType: 'melody',
+            previewNote: 'E3',
+            previewDuration: '2n',
+            settings: {
+                attackNoise: 1.0,
+                dampening: 4000,
+                resonance: 0.92
+            }
+        },
+        {
+            id: 'guitar-electric-distorted',
+            name: 'Electric Distorted',
+            category: 'Guitars',
+            subcategory: 'Electric',
+            instrumentType: 'PluckSynth',
+            trackType: 'melody',
+            previewNote: 'E3',
+            previewDuration: '2n',
+            settings: {
+                attackNoise: 3.0,
+                dampening: 2000,
+                resonance: 0.88
+            }
+        },
+        {
+            id: 'guitar-acoustic',
+            name: 'Acoustic',
+            category: 'Guitars',
+            subcategory: 'Acoustic',
+            instrumentType: 'PluckSynth',
+            trackType: 'melody',
+            previewNote: 'E3',
+            previewDuration: '2n',
+            settings: {
+                attackNoise: 0.8,
+                dampening: 5000,
+                resonance: 0.95
+            }
+        },
+        {
+            id: 'guitar-muted',
+            name: 'Muted Guitar',
+            category: 'Guitars',
+            subcategory: 'Electric',
+            instrumentType: 'PluckSynth',
+            trackType: 'melody',
+            previewNote: 'A3',
+            previewDuration: '8n',
+            settings: {
+                attackNoise: 2.0,
+                dampening: 1000,
+                resonance: 0.7
+            }
+        },
+        {
+            id: 'guitar-harmonics',
+            name: 'Harmonics',
+            category: 'Guitars',
+            subcategory: 'Electric',
+            instrumentType: 'PluckSynth',
+            trackType: 'melody',
+            previewNote: 'E5',
+            previewDuration: '4n',
+            settings: {
+                attackNoise: 0.3,
+                dampening: 8000,
+                resonance: 0.98
+            }
+        },
+        {
+            id: 'guitar-power-chord',
+            name: 'Power Chord',
+            category: 'Guitars',
+            subcategory: 'Electric',
+            instrumentType: 'PluckSynth',
+            trackType: 'melody',
+            previewNote: 'E2',
+            previewDuration: '2n',
+            settings: {
+                attackNoise: 4.0,
+                dampening: 1500,
+                resonance: 0.85
+            }
+        }
+    ],
+
+    'Brass': [
+        {
+            id: 'brass-trumpet',
+            name: 'Trumpet',
+            category: 'Brass',
+            subcategory: 'Bright',
+            instrumentType: 'FMSynth',
+            trackType: 'melody',
+            previewNote: 'C5',
+            previewDuration: '2n',
+            settings: {
+                harmonicity: 1,
+                modulationIndex: 8,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.02, decay: 0.1, sustain: 0.6, release: 0.4 },
+                modulation: { type: 'square' },
+                modulationEnvelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.3 }
+            }
+        },
+        {
+            id: 'brass-trombone',
+            name: 'Trombone',
+            category: 'Brass',
+            subcategory: 'Low',
+            instrumentType: 'FMSynth',
+            trackType: 'melody',
+            previewNote: 'C3',
+            previewDuration: '2n',
+            settings: {
+                harmonicity: 1,
+                modulationIndex: 6,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.03, decay: 0.15, sustain: 0.7, release: 0.5 },
+                modulation: { type: 'sawtooth' },
+                modulationEnvelope: { attack: 0.03, decay: 0.25, sustain: 0.6, release: 0.4 }
+            }
+        },
+        {
+            id: 'brass-horn',
+            name: 'French Horn',
+            category: 'Brass',
+            subcategory: 'Mid',
+            instrumentType: 'FMSynth',
+            trackType: 'melody',
+            previewNote: 'C4',
+            previewDuration: '2n',
+            settings: {
+                harmonicity: 2,
+                modulationIndex: 5,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.05, decay: 0.2, sustain: 0.8, release: 0.6 },
+                modulation: { type: 'triangle' },
+                modulationEnvelope: { attack: 0.05, decay: 0.3, sustain: 0.7, release: 0.5 }
+            }
+        },
+        {
+            id: 'brass-sax',
+            name: 'Saxophone',
+            category: 'Brass',
+            subcategory: 'Mid',
+            instrumentType: 'FMSynth',
+            trackType: 'melody',
+            previewNote: 'C4',
+            previewDuration: '2n',
+            settings: {
+                harmonicity: 1.5,
+                modulationIndex: 12,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.02, decay: 0.15, sustain: 0.7, release: 0.4 },
+                modulation: { type: 'sine' },
+                modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.3 }
+            }
+        },
+        {
+            id: 'brass-section',
+            name: 'Brass Section',
+            category: 'Brass',
+            subcategory: 'Ensemble',
+            instrumentType: 'FMSynth',
+            trackType: 'melody',
+            previewNote: 'C4',
+            previewDuration: '2n',
+            settings: {
+                harmonicity: 1,
+                modulationIndex: 10,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.05, decay: 0.2, sustain: 0.8, release: 0.5 },
+                modulation: { type: 'square' },
+                modulationEnvelope: { attack: 0.05, decay: 0.25, sustain: 0.7, release: 0.4 }
+            }
+        }
+    ],
+
+    'Ethnic': [
+        {
+            id: 'ethnic-sitar',
+            name: 'Sitar',
+            category: 'Ethnic',
+            subcategory: 'Indian',
+            instrumentType: 'PluckSynth',
+            trackType: 'melody',
+            previewNote: 'C4',
+            previewDuration: '2n',
+            settings: {
+                attackNoise: 0.5,
+                dampening: 3000,
+                resonance: 0.96
+            }
+        },
+        {
+            id: 'ethnic-koto',
+            name: 'Koto',
+            category: 'Ethnic',
+            subcategory: 'Japanese',
+            instrumentType: 'PluckSynth',
+            trackType: 'melody',
+            previewNote: 'C4',
+            previewDuration: '2n',
+            settings: {
+                attackNoise: 0.7,
+                dampening: 4500,
+                resonance: 0.93
+            }
+        },
+        {
+            id: 'ethnic-shamisen',
+            name: 'Shamisen',
+            category: 'Ethnic',
+            subcategory: 'Japanese',
+            instrumentType: 'PluckSynth',
+            trackType: 'melody',
+            previewNote: 'C3',
+            previewDuration: '4n',
+            settings: {
+                attackNoise: 1.2,
+                dampening: 2500,
+                resonance: 0.87
+            }
+        },
+        {
+            id: 'ethnic-kalimba',
+            name: 'Kalimba',
+            category: 'Ethnic',
+            subcategory: 'African',
+            instrumentType: 'MetalSynth',
+            trackType: 'melody',
+            previewNote: 'C5',
+            previewDuration: '4n',
+            settings: {
+                harmonicity: 8,
+                resonance: 3000,
+                modulationIndex: 20,
+                envelope: { attack: 0.001, decay: 0.4, sustain: 0.1, release: 0.8 },
+                octaves: 1.5
+            }
+        },
+        {
+            id: 'ethnic-didgeridoo',
+            name: 'Didgeridoo',
+            category: 'Ethnic',
+            subcategory: 'Australian',
+            instrumentType: 'FMSynth',
+            trackType: 'bass',
+            previewNote: 'C2',
+            previewDuration: '1n',
+            settings: {
+                harmonicity: 1,
+                modulationIndex: 3,
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.1, decay: 0.3, sustain: 0.9, release: 0.5 },
+                modulation: { type: 'square' },
+                modulationEnvelope: { attack: 0.1, decay: 0.4, sustain: 0.8, release: 0.4 }
+            }
+        },
+        {
+            id: 'ethnic-pan-flute',
+            name: 'Pan Flute',
+            category: 'Ethnic',
+            subcategory: 'Wind',
+            instrumentType: 'Synth',
+            trackType: 'melody',
+            previewNote: 'C5',
+            previewDuration: '2n',
+            settings: {
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.08, decay: 0.2, sustain: 0.6, release: 0.8 }
+            }
+        },
+        {
+            id: 'ethnic-bagpipe',
+            name: 'Bagpipe',
+            category: 'Ethnic',
+            subcategory: 'Wind',
+            instrumentType: 'AMSynth',
+            trackType: 'melody',
+            previewNote: 'C4',
+            previewDuration: '1n',
+            settings: {
+                harmonicity: 2,
+                oscillator: { type: 'square' },
+                envelope: { attack: 0.1, decay: 0.1, sustain: 0.9, release: 0.5 },
+                modulation: { type: 'sine' },
+                modulationEnvelope: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.4 }
+            }
+        }
+    ],
+
+    'Granular': [
+        {
+            id: 'granular-texture',
+            name: 'Texture',
+            category: 'Granular',
+            subcategory: 'Atmospheric',
+            instrumentType: 'NoiseSynth',
+            trackType: 'ambient',
+            previewNote: 'C3',
+            previewDuration: '1n',
+            settings: {
+                noise: { type: 'pink' },
+                envelope: { attack: 0.5, decay: 1.0, sustain: 0.5, release: 1.5 }
+            }
+        },
+        {
+            id: 'granular-swarm',
+            name: 'Swarm',
+            category: 'Granular',
+            subcategory: 'Dense',
+            instrumentType: 'MetalSynth',
+            trackType: 'ambient',
+            previewNote: 'C5',
+            previewDuration: '2n',
+            settings: {
+                harmonicity: 12,
+                resonance: 800,
+                modulationIndex: 40,
+                envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 0.6 },
+                octaves: 2
+            }
+        },
+        {
+            id: 'granular-shimmer',
+            name: 'Shimmer',
+            category: 'Granular',
+            subcategory: 'Bright',
+            instrumentType: 'MetalSynth',
+            trackType: 'ambient',
+            previewNote: 'C6',
+            previewDuration: '2n',
+            settings: {
+                harmonicity: 15,
+                resonance: 5000,
+                modulationIndex: 30,
+                envelope: { attack: 0.05, decay: 0.8, sustain: 0.3, release: 1.2 },
+                octaves: 2.5
+            }
+        },
+        {
+            id: 'granular-frozen',
+            name: 'Frozen',
+            category: 'Granular',
+            subcategory: 'Sustained',
+            instrumentType: 'Synth',
+            trackType: 'ambient',
+            previewNote: 'C4',
+            previewDuration: '1n',
+            settings: {
+                oscillator: { type: 'sine' },
+                envelope: { attack: 2.0, decay: 0.5, sustain: 0.8, release: 3.0 }
             }
         }
     ]
