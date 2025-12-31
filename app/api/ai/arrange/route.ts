@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
             generationConfig: {
                 responseMimeType: "application/json",
                 temperature: 0,
-                maxOutputTokens: 16384,  // 12 bars, 5-7 tracks, rich arrangements
+                maxOutputTokens: 16384,
                 responseSchema: ({
                     type: SchemaType.OBJECT,
                     properties: {

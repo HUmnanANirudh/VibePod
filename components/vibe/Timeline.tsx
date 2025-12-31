@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { LOOP_COLORS } from '@/lib/audioUtils';
 
 const PIXELS_PER_BAR = 120;
-const TOTAL_BARS = 128; // ~4 minutes at 120bpm
+const TOTAL_BARS = 128;
 
 export function Timeline() {
     const { project, currentBar, updateTrack, seekTo } = useAudioStore();

@@ -14,13 +14,8 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-      {/* Header / Transport */}
       <Transport initAudio={initAudio} />
-
-      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        
-        {/* Browser / Library Panel */}
         <div className="w-72 border-r border-zinc-800 bg-[#1e1e20] flex flex-col shadow-2xl z-20">
           <div className="h-8 bg-zinc-900 border-b border-black flex items-center px-3 justify-between">
              <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
