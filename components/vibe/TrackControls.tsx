@@ -1,13 +1,9 @@
-import React from 'react';
-import { Volume2, MicOff, Music, Mic } from 'lucide-react'; 
-// MicOff as Mute icon? Or VolumeX
 import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
 import { Toggle } from '@/components/ui/toggle';
-import { Track } from '@/lib/schema';
-import { useAudioStore } from '@/store/useAudioStore';
-import { cn } from '@/lib/utils';
 import { LOOP_COLORS } from '@/lib/audioUtils';
+import { Track } from '@/lib/schema';
+import { cn } from '@/lib/utils';
+import { useAudioStore } from '@/store/useAudioStore';
 
 interface TrackControlsProps {
     track: Track;
