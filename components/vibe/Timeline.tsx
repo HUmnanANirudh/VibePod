@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useAudioStore } from "@/store/useAudioStore";
 import { TrackControls } from "./TrackControls";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { LOOP_COLORS } from "@/lib/audioUtils";
 
@@ -223,111 +224,130 @@ export function Timeline() {
   };
 
   return (
-    <div
-      className="flex-1 overflow-auto bg-zinc-950 relative select-none"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle at 50% 50%, #18181b 1px, transparent 1px)",
-        backgroundSize: "24px 24px",
-      }}
-      onMouseMove={handleMouseMove}
-    >
-      <div className="flex flex-col min-w-max">
-        {/* Ruler */}
-        <div className="flex h-8 border-b border-zinc-800 pl-64 sticky top-0 bg-zinc-900/90 backdrop-blur z-10 w-full shadow-lg">
-          {Array.from({ length: TOTAL_BARS }).map((_, i) => (
-            <div
-              key={i}
-              className="shrink border-l border-zinc-700/50 px-1 text-[10px] font-mono text-zinc-500"
-              style={{ width: PIXELS_PER_BAR }}
-            >
-              {i + 1}
-            </div>
-          ))}
-        </div>
-
-        {/* Tracks */}
-        {project.tracks.map((track) => (
-          <div
-            key={track.id}
-            className="flex border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors"
-          >
-            <TrackControls track={track} />
-
-            {/* Lane */}
-            <div
-              className="relative h-24 flex-1 w-md bg-zinc-900/20"
-              onClick={(e) => handleTrackClick(track.id, e)}
-              onDrop={(e) => handleDrop(e, track.id)}
-              onDragOver={handleDragOver}
-            >
-              <div className="absolute inset-0 flex pointer-events-none">
-                {Array.from({ length: TOTAL_BARS }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="shrink border-r border-dashed border-zinc-800/30 h-full"
-                    style={{ width: PIXELS_PER_BAR }}
-                  ></div>
-                ))}
+    <div className="flex-1 bg-zinc-950 relative select-none flex flex-col h-full">
+      {/* Ruler Header - Fixed */}
+      <div className="flex h-8 border-b border-zinc-800 bg-zinc-900/90 backdrop-blur z-10 shadow-lg shrink-0">
+        <div className="w-64 shrink-0 border-r border-zinc-800"></div>
+        <ScrollArea className="flex-1" orientation="horizontal">
+          <div className="flex h-8" style={{ width: TOTAL_BARS * PIXELS_PER_BAR }}>
+            {Array.from({ length: TOTAL_BARS }).map((_, i) => (
+              <div
+                key={i}
+                className="shrink-0 border-l border-zinc-700/50 px-1 text-[10px] font-mono text-zinc-500"
+                style={{ width: PIXELS_PER_BAR }}
+              >
+                {i + 1}
               </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
-              {track.clips.map((clip, idx) => {
-                const isBeingDragged =
-                  clipPreview &&
-                  clipPreview.trackId === track.id &&
-                  clipPreview.clipIndex === idx;
-                const displayStartBar = isBeingDragged
-                  ? clipPreview.startBar
-                  : clip.startBar;
+      {/* Main Content Area */}
+      <div className="flex-1 flex min-h-0">
+        {/* Track Controls - Fixed Left Sidebar */}
+        <ScrollArea className="w-64 shrink-0 border-r border-zinc-800 bg-zinc-950" orientation="vertical">
+          <div className="flex flex-col">
+            {project.tracks.map((track) => (
+              <TrackControls key={track.id} track={track} />
+            ))}
+          </div>
+        </ScrollArea>
 
-                return (
-                  <div
-                    key={`${clip.startBar}-${idx}`}
-                    className={cn(
-                      "absolute top-1 bottom-1 rounded border-t border-white/20 border-b shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center overflow-hidden",
-                      LOOP_COLORS[track.type] || "bg-zinc-700",
-                      "after:absolute after:inset-0 after:bg-linear-to-b after:from-white/10 after:to-transparent hover:brightness-110",
-                      isBeingDragged ? "" : "transition-all"
-                    )}
-                    style={{
-                      left: displayStartBar * PIXELS_PER_BAR,
-                      width: clip.durationBars * PIXELS_PER_BAR,
-                    }}
-                    onMouseDown={(e) =>
-                      handleMouseDown(e, track.id, idx, clip.startBar)
-                    }
-                    onContextMenu={(e) => deleteClip(e, track.id, idx)}
-                    onClick={(e) => e.stopPropagation()}
-                    title="Drag to move, Shift+Click or Right Click to delete"
-                  >
-                    <div className="relative z-10 text-white/90 text-[10px] font-bold pointer-events-none truncate px-2 drop-shadow-md">
-                      {track.instrument?.type || "Clip"}
-                    </div>
+        {/* Timeline Lanes - Scrollable */}
+        <ScrollArea className="flex-1" orientation="both">
+          <div 
+            className="relative"
+            onMouseMove={handleMouseMove}
+            style={{ 
+              width: TOTAL_BARS * PIXELS_PER_BAR,
+              minHeight: "100%",
+              backgroundImage: "radial-gradient(circle at 50% 50%, #18181b 1px, transparent 1px)",
+              backgroundSize: "24px 24px",
+            }}
+          >
+            {project.tracks.map((track) => (
+              <div
+                key={track.id}
+                className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors"
+              >
+                <div
+                  className="relative h-24 bg-zinc-900/20"
+                  onClick={(e) => handleTrackClick(track.id, e)}
+                  onDrop={(e) => handleDrop(e, track.id)}
+                  onDragOver={handleDragOver}
+                >
+                  <div className="absolute inset-0 flex pointer-events-none">
+                    {Array.from({ length: TOTAL_BARS }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="shrink-0 border-r border-dashed border-zinc-800/30 h-full"
+                        style={{ width: PIXELS_PER_BAR }}
+                      ></div>
+                    ))}
                   </div>
-                );
-              })}
+
+                  {track.clips.map((clip, idx) => {
+                    const isBeingDragged =
+                      clipPreview &&
+                      clipPreview.trackId === track.id &&
+                      clipPreview.clipIndex === idx;
+                    const displayStartBar = isBeingDragged
+                      ? clipPreview.startBar
+                      : clip.startBar;
+
+                    return (
+                      <div
+                        key={`${clip.startBar}-${idx}`}
+                        className={cn(
+                          "absolute top-1 bottom-1 rounded border-t border-white/20 border-b shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center overflow-hidden",
+                          LOOP_COLORS[track.type] || "bg-zinc-700",
+                          "after:absolute after:inset-0 after:bg-linear-to-b after:from-white/10 after:to-transparent hover:brightness-110",
+                          isBeingDragged ? "" : "transition-all"
+                        )}
+                        style={{
+                          left: displayStartBar * PIXELS_PER_BAR,
+                          width: clip.durationBars * PIXELS_PER_BAR,
+                        }}
+                        onMouseDown={(e) =>
+                          handleMouseDown(e, track.id, idx, clip.startBar)
+                        }
+                        onContextMenu={(e) => deleteClip(e, track.id, idx)}
+                        onClick={(e) => e.stopPropagation()}
+                        title="Drag to move, Shift+Click or Right Click to delete"
+                      >
+                        <div className="relative z-10 text-white/90 text-[10px] font-bold pointer-events-none truncate px-2 drop-shadow-md">
+                          {track.instrument?.type || "Clip"}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Playhead */}
+            <div
+              className={cn(
+                "absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group pointer-events-none",
+                draggingPlayhead ? "" : "transition-all duration-75"
+              )}
+              style={{
+                left:
+                  (playheadPreview !== null ? playheadPreview : currentBar) *
+                  PIXELS_PER_BAR,
+              }}
+            >
+              <div 
+                className="absolute -left-3 top-0 bottom-0 w-6 pointer-events-auto"
+                onMouseDown={handlePlayheadMouseDown}
+                title="Drag to scrub timeline"
+              ></div>
+              <div className="absolute top-0 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-cyan-500"></div>
+              <div className="absolute -left-0.5 top-0 bottom-0 w-0.5 bg-cyan-500 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] group-hover:w-1 transition-all"></div>
             </div>
           </div>
-        ))}
-
-        <div
-          className={cn(
-            "absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group",
-            draggingPlayhead ? "" : "transition-all duration-75"
-          )}
-          style={{
-            left:
-              256 +
-              (playheadPreview !== null ? playheadPreview : currentBar) *
-                PIXELS_PER_BAR,
-          }}
-          onMouseDown={handlePlayheadMouseDown}
-          title="Drag to scrub timeline"
-        >
-          <div className="absolute -left-3 top-0 bottom-0 w-6"></div>
-          <div className="absolute top-0 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-cyan-500"></div>
-          <div className="absolute -left-0.5 top-8 bottom-0 w-0.5 bg-cyan-500 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] group-hover:w-1 transition-all"></div>
-        </div>
+        </ScrollArea>
       </div>
     </div>
   );
