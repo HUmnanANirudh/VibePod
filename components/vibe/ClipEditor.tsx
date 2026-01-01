@@ -89,28 +89,49 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-125 bg-zinc-900 border-zinc-800">
-        <DialogHeader>
-          <DialogTitle className="text-zinc-100 flex items-center justify-between">
-            <span>Edit Clip</span>
+      <DialogContent className="sm:max-w-125 bg-zinc-900 rounded-sm border-x-4 border-zinc-800 shadow-2xl p-0 overflow-hidden border-y-0 gap-0">
+        {/* Decorative Screws */}
+        <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-zinc-700 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.8)] z-50 flex items-center justify-center pointer-events-none">
+          <div className="w-1.5 h-0.5 bg-zinc-900 rotate-45"></div>
+        </div>
+        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-zinc-700 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.8)] z-50 flex items-center justify-center pointer-events-none">
+          <div className="w-1.5 h-0.5 bg-zinc-900 rotate-45"></div>
+        </div>
+        <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-zinc-700 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.8)] z-50 flex items-center justify-center pointer-events-none">
+          <div className="w-1.5 h-0.5 bg-zinc-900 rotate-45"></div>
+        </div>
+        <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-zinc-700 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.8)] z-50 flex items-center justify-center pointer-events-none">
+          <div className="w-1.5 h-0.5 bg-zinc-900 rotate-45"></div>
+        </div>
+
+        <DialogHeader className="bg-zinc-800 p-1 border-b border-white/5 flex flex-row items-center justify-between px-4 h-9 space-y-0">
+          <DialogTitle className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase flex items-center gap-2">
+            <span>Clip Properties // V1.0</span>
           </DialogTitle>
+          <div className="flex gap-1">
+             <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse shadow-[0_0_4px_rgba(34,197,94,0.8)]"></div>
+             <div className="w-1 h-1 bg-zinc-600 rounded-full"></div>
+             <div className="w-1 h-1 bg-zinc-600 rounded-full"></div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 p-6 pb-2 relative">
+           <div className="absolute inset-0 pointer-events-none bg-linear-to-br from-white/5 to-transparent z-0"></div>
+           <div className="relative z-10 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="chord" className="text-zinc-300 text-sm font-semibold">
-              Chord
+            <Label htmlFor="chord" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+              Chord Selection
             </Label>
             <Select value={chord} onValueChange={setChord}>
-              <SelectTrigger className="w-full bg-zinc-800 border-zinc-700 text-zinc-100">
+              <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-cyan-400 font-mono text-sm h-10 rounded-sm focus:ring-1 focus:ring-cyan-500 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
                 <SelectValue placeholder="Select chord" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700 max-h-60">
+              <SelectContent className="bg-zinc-900 border-zinc-800 max-h-60">
                 {availableChords.map((c) => (
                   <SelectItem 
                     key={c} 
                     value={c}
-                    className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100"
+                    className="text-zinc-400 focus:bg-zinc-800 focus:text-cyan-400 font-mono"
                   >
                     {c}
                   </SelectItem>
@@ -121,10 +142,10 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="pitch" className="text-zinc-300 text-sm font-semibold">
-                Pitch
+              <Label htmlFor="pitch" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+                Pitch Offset
               </Label>
-              <span className="text-xs text-zinc-500 font-mono">{pitch > 0 ? '+' : ''}{pitch} semitones</span>
+              <span className="text-xs text-cyan-500/80 font-mono bg-zinc-950 px-2 py-0.5 rounded-sm border border-zinc-800 shadow-inner">{pitch > 0 ? '+' : ''}{pitch} semitones</span>
             </div>
             <Slider
               id="pitch"
@@ -133,16 +154,16 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
               max={12}
               step={1}
               onValueChange={(v) => setPitch(v[0])}
-              className="[&>.absolute]:bg-zinc-700 [&_span]:bg-cyan-500 [&_span]:border-cyan-600"
+              className="[&>.absolute]:bg-zinc-800 [&_span]:bg-cyan-500 [&_span]:border-cyan-400 [&_span]:shadow-[0_0_10px_rgba(6,182,212,0.5)]"
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="volume" className="text-zinc-300 text-sm font-semibold">
-                Volume
+              <Label htmlFor="volume" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+                Gain Level
               </Label>
-              <span className="text-xs text-zinc-500 font-mono">{Math.round(volume * 100)}%</span>
+              <span className="text-xs text-cyan-500/80 font-mono bg-zinc-950 px-2 py-0.5 rounded-sm border border-zinc-800 shadow-inner">{Math.round(volume * 100)}%</span>
             </div>
             <Slider
               id="volume"
@@ -151,24 +172,24 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
               max={1}
               step={0.01}
               onValueChange={(v) => setVolume(v[0])}
-              className="[&>.absolute]:bg-zinc-700 [&_span]:bg-green-500 [&_span]:border-green-600"
+              className="[&>.absolute]:bg-zinc-800 [&_span]:bg-green-500 [&_span]:border-green-400 [&_span]:shadow-[0_0_10px_rgba(34,197,94,0.5)]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="effect" className="text-zinc-300 text-sm font-semibold">
-              Effect
+            <Label htmlFor="effect" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+              FX Processor
             </Label>
             <Select value={effect} onValueChange={setEffect}>
-              <SelectTrigger className="w-full bg-zinc-800 border-zinc-700 text-zinc-100">
+              <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-cyan-400 font-mono text-sm h-10 rounded-sm focus:ring-1 focus:ring-cyan-500 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)]">
                 <SelectValue placeholder="Select effect" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700">
+              <SelectContent className="bg-zinc-900 border-zinc-800">
                 {EFFECT_TYPES.map((e) => (
                   <SelectItem 
                     key={e} 
                     value={e}
-                    className="text-zinc-100 focus:bg-zinc-700 focus:text-zinc-100"
+                    className="text-zinc-400 focus:bg-zinc-800 focus:text-cyan-400 font-mono"
                   >
                     {e}
                   </SelectItem>
@@ -180,10 +201,10 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
           {effect !== 'None' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="effectAmount" className="text-zinc-300 text-sm font-semibold">
-                  Effect Amount
+                <Label htmlFor="effectAmount" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+                  Dry / Wet
                 </Label>
-                <span className="text-xs text-zinc-500 font-mono">{Math.round(effectAmount * 100)}%</span>
+                <span className="text-xs text-cyan-500/80 font-mono bg-zinc-950 px-2 py-0.5 rounded-sm border border-zinc-800 shadow-inner">{Math.round(effectAmount * 100)}%</span>
               </div>
               <Slider
                 id="effectAmount"
@@ -192,33 +213,33 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
                 max={1}
                 step={0.01}
                 onValueChange={(v) => setEffectAmount(v[0])}
-                className="[&>.absolute]:bg-zinc-700 [&_span]:bg-purple-500 [&_span]:border-purple-600"
+                className="[&>.absolute]:bg-zinc-800 [&_span]:bg-purple-500 [&_span]:border-purple-400 [&_span]:shadow-[0_0_10px_rgba(168,85,247,0.5)]"
               />
             </div>
           )}
 
-          <div className="pt-4 border-t border-zinc-800">
+          <div className="pt-4 border-t border-zinc-800/50">
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
-                  <span className="text-zinc-500">Start Bar:</span>
-                  <span className="ml-2 text-zinc-300 font-mono">{clip.startBar + 1}</span>
+                  <span className="text-zinc-600 uppercase tracking-wider text-[10px] font-bold">Start Bar</span>
+                  <span className="ml-2 text-cyan-500/80 font-mono">{clip.startBar + 1}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500">Duration:</span>
-                  <span className="ml-2 text-zinc-300 font-mono">{clip.durationBars} bars</span>
+                  <span className="text-zinc-600 uppercase tracking-wider text-[10px] font-bold">Duration</span>
+                  <span className="ml-2 text-cyan-500/80 font-mono">{clip.durationBars} bars</span>
                 </div>
               </div>
               <div>
-                <div className="text-xs text-zinc-500 mb-2">Notes in Clip:</div>
-                <div className="max-h-32 overflow-y-auto space-y-1">
+                <div className="text-[10px] font-bold tracking-widest text-zinc-600 uppercase mb-2">Note Data</div>
+                <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
                   {clip.notes.map((note, idx) => (
-                    <div key={idx} className="text-xs bg-zinc-800/50 rounded px-2 py-1.5 flex justify-between items-center">
-                      <span className="text-zinc-300 font-mono">{note.pitch}</span>
-                      <div className="flex gap-3 text-zinc-500">
-                        <span>Start: {note.startTime}</span>
-                        <span>Duration: {note.duration}</span>
-                        {note.velocity && <span>Vel: {Math.round(note.velocity * 100)}%</span>}
+                    <div key={idx} className="text-xs bg-black/40 border border-zinc-800/50 rounded-sm px-2 py-1.5 flex justify-between items-center group hover:border-zinc-700 transition-colors">
+                      <span className="text-zinc-400 font-mono group-hover:text-cyan-400">{note.pitch}</span>
+                      <div className="flex gap-3 text-zinc-600 font-mono text-[10px]">
+                        <span>T: {note.startTime}</span>
+                        <span>D: {note.duration}</span>
+                        {note.velocity && <span>V: {Math.round(note.velocity * 100)}</span>}
                       </div>
                     </div>
                   ))}
@@ -226,21 +247,22 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
               </div>
             </div>
           </div>
+          </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-zinc-800">
+        <div className="flex justify-end gap-2 p-4 pt-0">
           <Button
             variant="outline"
             onClick={onClose}
-            className="bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+            className="rounded-sm bg-zinc-800 border-2 border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 hover:bg-zinc-900 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter"
           >
-            Cancel
+            CANCEL
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white"
+            className="rounded-sm bg-cyan-900/30 border-2 border-cyan-700 text-cyan-400 hover:text-cyan-300 hover:border-cyan-500 hover:bg-cyan-900/50 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter"
           >
-            Save Changes
+            APPLY CHANGES
           </Button>
         </div>
       </DialogContent>
