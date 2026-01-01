@@ -13,6 +13,16 @@ interface TrackControlsProps {
 export function TrackControls({ track }: TrackControlsProps) {
     const { updateTrack } = useAudioStore();
 
+    const handleMuteToggle = (muted: boolean) => {
+        console.log(`Track ${track.id} muted:`, muted);
+        updateTrack(track.id, { muted });
+    };
+
+    const handleVolumeChange = (value: number[]) => {
+        console.log(`Track ${track.id} volume:`, value[0]);
+        updateTrack(track.id, { volume: value[0] });
+    };
+
     return (
         <ScrollArea className="w-56 shrink-0 flex flex-col p-3 border-r border-zinc-800 bg-linear-to-r from-zinc-900 to-zinc-800/50 gap-2 relative group">
             <div className="flex items-center gap-2 mb-1">
@@ -32,7 +42,7 @@ export function TrackControls({ track }: TrackControlsProps) {
                 <Toggle 
                     size="sm" 
                     pressed={track.muted} 
-                    onPressedChange={(m) => updateTrack(track.id, { muted: m })}
+                    onPressedChange={handleMuteToggle}
                     className="h-6 w-6 p-0 rounded-sm bg-zinc-800 border border-zinc-700 data-[state=on]:bg-red-500/20 data-[state=on]:border-red-500 data-[state=on]:text-red-500 text-zinc-500 hover:text-zinc-300 transition-all shadow-sm"
                 >
                     <span className="text-[10px] font-bold">M</span>
@@ -43,7 +53,7 @@ export function TrackControls({ track }: TrackControlsProps) {
                     min={0}
                     max={1}
                     step={0.01}
-                    onValueChange={(v) => updateTrack(track.id, { volume: v[0] })}
+                    onValueChange={handleVolumeChange}
                     className="flex-1 [&>.absolute]:bg-zinc-700 [&_span]:bg-zinc-400 [&_span]:border-zinc-800"
                 />
             </div>

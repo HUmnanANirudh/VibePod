@@ -288,9 +288,11 @@ export function useAudioEngine() {
         }
     }, [seekRequest]);
 
-    // Update Progress
+    // Update Progress with smooth animation frame
     useEffect(() => {
-        const interval = setInterval(() => {
+        let animationFrameId: number;
+        
+        const updatePlayhead = () => {
             if (Tone.getTransport().state === 'started') {
                 const position = Tone.getTransport().position.toString().split(':');
                 const bars = parseInt(position[0]);
@@ -298,8 +300,16 @@ export function useAudioEngine() {
                 const sixteenths = parseFloat(position[2]);
                 setCurrentBar(bars + beats / 4 + sixteenths / 16);
             }
-        }, 100);
-        return () => clearInterval(interval);
+            animationFrameId = requestAnimationFrame(updatePlayhead);
+        };
+        
+        animationFrameId = requestAnimationFrame(updatePlayhead);
+        
+        return () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        };
     }, [setCurrentBar]);
 
     return { initAudio };
