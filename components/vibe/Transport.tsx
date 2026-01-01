@@ -13,7 +13,7 @@ interface TransportProps {
 }
 
 export function Transport({ initAudio }: TransportProps) {
-    const { isPlaying, setIsPlaying, project, setProject, currentBar, resetProject, seekTo } = useAudioStore();
+    const { isPlaying, setIsPlaying, project, setProject, currentBar, draggedPlayheadBar, resetProject, seekTo } = useAudioStore();
     
     // Format bars:beats:sixteenths
     const formatTime = (totalBars: number) => {
@@ -88,7 +88,7 @@ export function Transport({ initAudio }: TransportProps) {
                 <div className="group relative">
                     <div className="font-mono text-xl w-36 text-center border-2 border-zinc-700 rounded bg-black/80 p-1 text-cyan-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] relative overflow-hidden">
                         <div className="absolute top-0 left-0 right-0 h-[50%] bg-linear-to-b from-white/10 to-transparent pointer-events-none"></div>
-                        {formatTime(currentBar)}
+                        {formatTime(draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar)}
                     </div>
                     <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-[9px] font-bold text-zinc-500 uppercase tracking-widest pointer-events-none">
                         Transport Position

@@ -6,12 +6,14 @@ interface AudioState {
   isPlaying: boolean;
   seekRequest: { bar: number, timestamp: number } | null;
   currentBar: number; // For visualization
+  draggedPlayheadBar: number | null; // For playhead dragging
 
   // Actions
   setProject: (project: Project) => void;
   setIsPlaying: (isPlaying: boolean) => void;
   setCurrentBar: (bar: number) => void;
   seekTo: (bar: number) => void;
+  setDraggedPlayheadBar: (bar: number | null) => void;
   updateTrack: (trackId: string, updates: Partial<Track>) => void;
   // Initialize with some default empty project
   resetProject: () => void;
@@ -25,11 +27,13 @@ export const useAudioStore = create<AudioState>((set) => ({
   isPlaying: false,
   currentBar: 0,
   seekRequest: null,
+  draggedPlayheadBar: null,
 
   setProject: (project) => set({ project }),
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentBar: (currentBar) => set({ currentBar }),
   seekTo: (bar) => set({ seekRequest: { bar, timestamp: Date.now() } }),
+  setDraggedPlayheadBar: (bar) => set({ draggedPlayheadBar: bar }),
 
   updateTrack: (trackId, updates) => set((state) => {
     if (!state.project) return state;

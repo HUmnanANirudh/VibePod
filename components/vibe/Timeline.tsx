@@ -6,10 +6,11 @@ import { cn } from "@/lib/utils";
 import { LOOP_COLORS } from "@/lib/audioUtils";
 
 const PIXELS_PER_BAR = 120;
-const TOTAL_BARS = 128;
+const INITIAL_BARS = 128;
 
 export function Timeline() {
-  const { project, currentBar, updateTrack, seekTo } = useAudioStore();
+  const { project, currentBar, draggedPlayheadBar, updateTrack, seekTo, setDraggedPlayheadBar } = useAudioStore();
+  const [totalBars, setTotalBars] = useState(INITIAL_BARS);
   const [draggingClip, setDraggingClip] = useState<{
     trackId: string;
     clipIndex: number;
@@ -20,73 +21,84 @@ export function Timeline() {
     startX: number;
     originalBar: number;
   } | null>(null);
-  const [playheadPreview, setPlayheadPreview] = useState<number | null>(null);
   const [clipPreview, setClipPreview] = useState<{
     trackId: string;
     clipIndex: number;
     startBar: number;
   } | null>(null);
 
-  // Refs to store current values for event handlers
-  const draggingClipRef = useRef(draggingClip);
-  const clipPreviewRef = useRef(clipPreview);
-  const draggingPlayheadRef = useRef(draggingPlayhead);
-  const playheadPreviewRef = useRef(playheadPreview);
+  const timelineScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    draggingClipRef.current = draggingClip;
-    clipPreviewRef.current = clipPreview;
-    draggingPlayheadRef.current = draggingPlayhead;
-    playheadPreviewRef.current = playheadPreview;
-  }, [draggingClip, clipPreview, draggingPlayhead, playheadPreview]);
+    if (!project) return;
+    
+    const maxBarUsed = Math.max(
+      currentBar,
+      ...project.tracks.flatMap(track => 
+        track.clips.map(clip => clip.startBar + clip.durationBars)
+      )
+    );
 
-  useEffect(() => {
-    if (
-      playheadPreview !== null &&
-      !draggingPlayhead &&
-      Math.abs(currentBar - playheadPreview) < 0.1
-    ) {
-      setPlayheadPreview(null);
+    if (maxBarUsed > totalBars - 16) {
+      setTotalBars(prev => prev + 64);
     }
-  }, [currentBar, playheadPreview, draggingPlayhead]);
+  }, [currentBar, project, totalBars]);
+
+  useEffect(() => {
+    // Only auto-center during playback, not during drag
+    if (timelineScrollRef.current && !draggingPlayhead && !draggedPlayheadBar) {
+      const scrollContainer = timelineScrollRef.current;
+      const playheadPosition = currentBar * PIXELS_PER_BAR;
+      const containerWidth = scrollContainer.clientWidth;
+      const centerPosition = playheadPosition - containerWidth / 2;
+      
+      scrollContainer.scrollTo({
+        left: Math.max(0, centerPosition),
+        behavior: 'smooth'
+      });
+    }
+  }, [currentBar, draggingPlayhead, draggedPlayheadBar]);
+
+  useEffect(() => {
+    // Clear draggedPlayheadBar once currentBar has caught up to it
+    if (draggedPlayheadBar !== null && !draggingPlayhead && Math.abs(currentBar - draggedPlayheadBar) < 1) {
+      setDraggedPlayheadBar(null);
+    }
+  }, [currentBar, draggedPlayheadBar, draggingPlayhead, setDraggedPlayheadBar]);
+
+
 
   if (!project)
     return <div className="p-10 text-center">No Project Loaded</div>;
 
   useEffect(() => {
     const handleGlobalMouseUp = () => {
-      if (draggingClipRef.current && clipPreviewRef.current) {
-        const track = project.tracks.find(
-          (t) => t.id === clipPreviewRef.current!.trackId
-        );
+      if (draggingClip && clipPreview) {
+        const track = project.tracks.find((t) => t.id === clipPreview.trackId);
         if (track) {
           const newClips = [...track.clips];
-          newClips[clipPreviewRef.current.clipIndex] = {
-            ...newClips[clipPreviewRef.current.clipIndex],
-            startBar: clipPreviewRef.current.startBar,
+          newClips[clipPreview.clipIndex] = {
+            ...newClips[clipPreview.clipIndex],
+            startBar: clipPreview.startBar,
           };
-          updateTrack(clipPreviewRef.current.trackId, { clips: newClips });
+          updateTrack(clipPreview.trackId, { clips: newClips });
         }
       }
 
-      if (draggingPlayheadRef.current && playheadPreviewRef.current !== null) {
-        seekTo(playheadPreviewRef.current);
+      if (draggingPlayhead && draggedPlayheadBar !== null) {
+        seekTo(draggedPlayheadBar);
       }
 
       setDraggingClip(null);
       setDraggingPlayhead(null);
       setClipPreview(null);
-
-      if (!draggingPlayheadRef.current) {
-        setPlayheadPreview(null);
-      }
     };
 
     document.addEventListener("mouseup", handleGlobalMouseUp);
     return () => {
       document.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [project, updateTrack, seekTo]);
+  }, [project, updateTrack, seekTo, draggingClip, clipPreview, draggingPlayhead, draggedPlayheadBar]);
 
   const handleMouseDown = (
     e: React.MouseEvent,
@@ -115,9 +127,12 @@ export function Timeline() {
 
       let newBar = draggingPlayhead.originalBar + deltaBars;
       if (newBar < 0) newBar = 0;
-      if (newBar >= TOTAL_BARS) newBar = TOTAL_BARS - 1;
 
-      setPlayheadPreview(newBar);
+      if (newBar >= totalBars - 8) {
+        setTotalBars(prev => prev + 32);
+      }
+
+      setDraggedPlayheadBar(newBar);
       return;
     }
 
@@ -127,6 +142,11 @@ export function Timeline() {
 
     let newStartBar = draggingClip.originalStartBar + deltaBars;
     if (newStartBar < 0) newStartBar = 0;
+    
+    // Extend timeline if dragging clip beyond current end
+    if (newStartBar >= totalBars - 8) {
+      setTotalBars(prev => prev + 32);
+    }
 
     setClipPreview({
       trackId: draggingClip.trackId,
@@ -141,7 +161,7 @@ export function Timeline() {
       startX: e.clientX,
       originalBar: currentBar,
     });
-    setPlayheadPreview(currentBar);
+    setDraggedPlayheadBar(currentBar);
   };
 
   const handleDrop = (e: React.DragEvent, trackId: string) => {
@@ -225,12 +245,11 @@ export function Timeline() {
 
   return (
     <div className="flex-1 bg-zinc-950 relative select-none flex flex-col h-full">
-      {/* Ruler Header - Fixed */}
       <div className="flex h-8 border-b border-zinc-800 bg-zinc-900/90 backdrop-blur z-10 shadow-lg shrink-0">
-        <div className="w-64 shrink-0 border-r border-zinc-800"></div>
+        <div className="w-56 shrink-0 border-r border-zinc-800"></div>
         <ScrollArea className="flex-1" orientation="horizontal">
-          <div className="flex h-8" style={{ width: TOTAL_BARS * PIXELS_PER_BAR }}>
-            {Array.from({ length: TOTAL_BARS }).map((_, i) => (
+          <div className="flex h-8" style={{ width: totalBars * PIXELS_PER_BAR }}>
+            {Array.from({ length: totalBars }).map((_, i) => (
               <div
                 key={i}
                 className="shrink-0 border-l border-zinc-700/50 px-1 text-[10px] font-mono text-zinc-500"
@@ -242,25 +261,23 @@ export function Timeline() {
           </div>
         </ScrollArea>
       </div>
-
-      {/* Main Content Area */}
       <div className="flex-1 flex min-h-0">
-        {/* Track Controls - Fixed Left Sidebar */}
-        <ScrollArea className="w-64 shrink-0 border-r border-zinc-800 bg-zinc-950" orientation="vertical">
+        <ScrollArea className="w-56shrink-0 border-r border-zinc-800 bg-zinc-950 overflow-y-auto">
           <div className="flex flex-col">
             {project.tracks.map((track) => (
               <TrackControls key={track.id} track={track} />
             ))}
           </div>
         </ScrollArea>
-
-        {/* Timeline Lanes - Scrollable */}
-        <ScrollArea className="flex-1" orientation="both">
+        <div 
+          ref={timelineScrollRef} 
+          className="flex-1 overflow-auto relative scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent hover:scrollbar-thumb-zinc-600"
+        >
           <div 
             className="relative"
             onMouseMove={handleMouseMove}
             style={{ 
-              width: TOTAL_BARS * PIXELS_PER_BAR,
+              width: totalBars * PIXELS_PER_BAR,
               minHeight: "100%",
               backgroundImage: "radial-gradient(circle at 50% 50%, #18181b 1px, transparent 1px)",
               backgroundSize: "24px 24px",
@@ -278,7 +295,7 @@ export function Timeline() {
                   onDragOver={handleDragOver}
                 >
                   <div className="absolute inset-0 flex pointer-events-none">
-                    {Array.from({ length: TOTAL_BARS }).map((_, i) => (
+                    {Array.from({ length: totalBars }).map((_, i) => (
                       <div
                         key={i}
                         className="shrink-0 border-r border-dashed border-zinc-800/30 h-full"
@@ -325,29 +342,30 @@ export function Timeline() {
                 </div>
               </div>
             ))}
-
-            {/* Playhead */}
+            
+            {/* Playhead - Wider drag area for easier grabbing */}
             <div
               className={cn(
-                "absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group pointer-events-none",
+                "absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group",
                 draggingPlayhead ? "" : "transition-all duration-75"
               )}
               style={{
                 left:
-                  (playheadPreview !== null ? playheadPreview : currentBar) *
+                  (draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar) *
                   PIXELS_PER_BAR,
               }}
+              onMouseDown={handlePlayheadMouseDown}
+              title="Drag to scrub timeline"
             >
-              <div 
-                className="absolute -left-3 top-0 bottom-0 w-6 pointer-events-auto"
-                onMouseDown={handlePlayheadMouseDown}
-                title="Drag to scrub timeline"
-              ></div>
+              {/* Wider invisible hit area - 40px total for easier grabbing */}
+              <div className="absolute -left-5 top-0 bottom-0 w-10"></div>
+              {/* Triangle pointer at top */}
               <div className="absolute top-0 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-cyan-500"></div>
-              <div className="absolute -left-0.5 top-0 bottom-0 w-0.5 bg-cyan-500 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] group-hover:w-1 transition-all"></div>
+              {/* Visible playhead line */}
+              <div className="absolute -left-0.5 top-0 bottom-0 w-0.5 bg-cyan-500 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] group-hover:w-1 group-hover:shadow-[0_0_15px_3px_rgba(6,182,212,0.6)] transition-all"></div>
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { LOOP_COLORS } from '@/lib/audioUtils';
 import { Track } from '@/lib/schema';
 import { cn } from '@/lib/utils';
 import { useAudioStore } from '@/store/useAudioStore';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface TrackControlsProps {
     track: Track;
@@ -13,7 +14,7 @@ export function TrackControls({ track }: TrackControlsProps) {
     const { updateTrack } = useAudioStore();
 
     return (
-        <div className="w-64 shrink-0 flex flex-col p-3 border-r border-zinc-800 bg-linear-to-r from-zinc-900 to-zinc-800/50 gap-2 relative group">
+        <ScrollArea className="w-56 shrink-0 flex flex-col p-3 border-r border-zinc-800 bg-linear-to-r from-zinc-900 to-zinc-800/50 gap-2 relative group">
             <div className="flex items-center gap-2 mb-1">
                 <div className={cn("w-1 h-8 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)]", LOOP_COLORS[track.type] || "bg-gray-500")} />
                 <div className="flex-1 overflow-hidden">
@@ -46,6 +47,6 @@ export function TrackControls({ track }: TrackControlsProps) {
                     className="flex-1 [&>.absolute]:bg-zinc-700 [&_span]:bg-zinc-400 [&_span]:border-zinc-800"
                 />
             </div>
-        </div>
+        </ScrollArea>
     );
 }
