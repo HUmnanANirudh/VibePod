@@ -13,7 +13,9 @@ export async function POST(req: NextRequest) {
             model: "gemini-2.5-flash-lite",
             generationConfig: {
                 responseMimeType: "application/json",
-                temperature: 0,
+                temperature: 1.2, // High temperature for creativity and variety
+                topP: 0.95,
+                topK: 40,
                 maxOutputTokens: 16384,
                 responseSchema: ({
                     type: SchemaType.OBJECT,
@@ -109,9 +111,26 @@ export async function POST(req: NextRequest) {
                 } as any)
             }
         });
+        const randomSeed = Math.floor(Math.random() * 1000000);
+        const styleVariations = [
+            "minimal and spacious with lots of breaks",
+            "dense and layered with complex rhythms",
+            "groove-focused with syncopated patterns",
+            "atmospheric with evolving textures",
+            "energetic with driving momentum",
+            "experimental with unusual sound design",
+            "melodic with memorable hooks",
+            "dark and moody with heavy bass"
+        ];
+        const randomStyle = styleVariations[Math.floor(Math.random() * styleVariations.length)];
+        
+        const keySignatures = ["C major", "D minor", "G major", "A minor", "E minor", "F major", "Bb major", "C minor"];
+        const randomKey = keySignatures[Math.floor(Math.random() * keySignatures.length)];
 
         const result = await model.generateContent(`
-You are a world-class electronic music producer. Create an immersive, professional ${prompt.toLowerCase()} arrangement.
+You are a world-class electronic music producer. Create a ${randomStyle} ${prompt.toLowerCase()} arrangement in ${randomKey}.
+
+🎲 RANDOMIZATION SEED: ${randomSeed} - Make this track UNIQUE and DIFFERENT from others!
 
 ════════════════════════════════════════════════════════════════════════
 🎯 CRITICAL REQUIREMENTS
@@ -119,93 +138,133 @@ You are a world-class electronic music producer. Create an immersive, profession
 - Exactly 12 bars (bar 0-11) - enough for intro, build, drop
 - 5-7 tracks for RICH, layered sound
 - Each clip: 2 bars long, 4-6 notes MAX (keep it tight!)
-- BPM: Match genre (Techno 130-135, House 122-126, Lo-Fi 70-85, Trap 135-145)
+- BPM: Vary by genre (Techno 128-138, House 118-128, Lo-Fi 65-90, Trap 130-150, Dubstep 138-145)
+- Key: ${randomKey} - USE THIS KEY SIGNATURE FOR ALL MELODIC ELEMENTS!
+
+🎨 STYLE FOCUS: ${randomStyle.toUpperCase()}
+Make this arrangement reflect this specific style. Be creative and experimental!
 
 ════════════════════════════════════════════════════════════════════════
-🎹 FULL INSTRUMENT PALETTE (USE THEM ALL!)
+🎹 INSTRUMENT SELECTION (BE DIVERSE!)
 ════════════════════════════════════════════════════════════════════════
-DRUMS (1-2 tracks):
-  - MembraneSynth (kicks, toms)
-  - NoiseSynth (hats, cymbals, white noise)
-  - MetalSynth (metallic percussion, bells)
-  Pitches: C2=kick, D2=snare, F#2=hats, A2=toms, C#3=crash
+DRUMS (1-2 tracks) - Mix it up each time:
+  - MembraneSynth (kicks, toms) - organic drum sounds
+  - NoiseSynth (hats, cymbals, white noise) - crispy percussion
+  - MetalSynth (metallic percussion, bells) - industrial/robotic
+  Pitches: C2=kick, D2=snare, F#2=closed-hat, G2=open-hat, A2=toms, B2=rim, C#3=crash
 
-BASS (1 track):
-  - MonoSynth (classic analog bass)
-  - FMSynth (growly FM bass)
-  - AMSynth (warm amplitude-modulated bass)
+BASS (1 track) - Choose based on style:
+  - MonoSynth: classic analog, warm (house, techno)
+  - FMSynth: aggressive, growly (dubstep, trap)
+  - AMSynth: deep, sub-heavy (dnb, trap)
 
-LEADS/MELODY (2-3 tracks):
-  - Synth (classic sawtooth leads)
-  - PluckSynth (organic plucks, guitar-like)
-  - DuoSynth (detuned dual oscillators, thick)
-  - FMSynth (bell-like, crystalline)
+LEADS/MELODY (2-3 tracks) - Vary instruments:
+  - Synth: bright, cutting leads
+  - PluckSynth: organic, guitar-like arpeggios
+  - DuoSynth: thick, detuned synths
+  - FMSynth: bell-like, crystalline melodies
+  - MetalSynth: metallic, robotic leads
 
 PADS/ATMOSPHERE (1-2 tracks):
-  - AMSynth (lush pads)
-  - DuoSynth (wide stereo pads)
-  - MonoSynth (droning bass pad)
+  - AMSynth: lush, evolving pads
+  - DuoSynth: wide stereo atmosphere
+  - MonoSynth: droning bass pad
+  - Synth: filtered pad sounds
 
 ════════════════════════════════════════════════════════════════════════
-🎛️ FULL EFFECTS ARSENAL (BE CREATIVE!)
+🎛️ EFFECTS VARIETY (RANDOMIZE EACH TRACK!)
 ════════════════════════════════════════════════════════════════════════
-DISTORTION/COLOR:
-  - Distortion (grit, warmth)
-  - BitCrusher (lo-fi, retro)
-  - Chebyshev (waveshaping, harmonic distortion)
+Choose 2-3 DIFFERENT effects per track from these categories:
+
+TEXTURE:
+  - Distortion (0.2-0.4 wet): grit, warmth, analog color
+  - BitCrusher (0.15-0.3 wet): lo-fi, retro, digital grit
+  - Chebyshev (0.2-0.35 wet): harmonic saturation
 
 MODULATION:
-  - Chorus (width, movement)
-  - Phaser (swirling, psychedelic)
-  - Tremolo (rhythmic volume)
-  - Vibrato (pitch wobble)
-  - AutoFilter (sweeping filter)
-  - AutoWah (funky wah movement)
-  - AutoPanner (stereo movement)
-  - FrequencyShifter (detuned, alien)
+  - Chorus (0.25-0.4 wet): width, shimmer
+  - Phaser (0.2-0.35 wet): swirling movement
+  - Tremolo (0.25-0.4 wet): pulsing rhythm
+  - Vibrato (0.15-0.3 wet): pitch wobble
+  - AutoFilter (0.3-0.45 wet): sweeping filter
+  - AutoWah (0.25-0.4 wet): funky movement
 
-SPACE/TIME:
-  - Reverb (room, hall)
-  - JCReverb (spring reverb)
-  - Freeverb (lush algorithmic reverb)
-  - FeedbackDelay (classic delay)
-  - PingPongDelay (stereo bouncing delay)
-  - PitchShift (octaves, harmonies)
+SPACE:
+  - Reverb (0.25-0.45 wet): hall, chamber
+  - JCReverb (0.2-0.35 wet): spring reverb
+  - Freeverb (0.3-0.5 wet): lush space
+  - FeedbackDelay (0.2-0.4 wet): classic delay
+  - PingPongDelay (0.25-0.4 wet): stereo delay
 
-DYNAMICS:
-  - StereoWidener (wide stereo)
+SPECIAL:
+  - PitchShift (0.15-0.3 wet): octaves, harmonies
+  - StereoWidener (0.3-0.5 wet): wide stereo
+  - FrequencyShifter (0.15-0.3 wet): detuned, alien
+  - AutoPanner (0.25-0.4 wet): stereo movement
 
-Use 2-3 effects per track. Wet: 0.15-0.45 MAX.
-
-════════════════════════════════════════════════════════════════════════
-🎨 ARRANGEMENT STRUCTURE (12 BARS)
-════════════════════════════════════════════════════════════════════════
-Bars 0-3: INTRO - Minimal, build tension
-Bars 4-7: BUILD - Add layers, energy rises
-Bars 8-11: DROP/MAIN - Full arrangement, all tracks
-
-Start sparse, build to full richness!
+IMPORTANT: Use DIFFERENT effect combinations for each track. Don't repeat patterns!
 
 ════════════════════════════════════════════════════════════════════════
-🎚️ MIX LEVELS (CRITICAL)
+🎨 ARRANGEMENT STRUCTURES (CHOOSE ONE AT RANDOM)
+════════════════════════════════════════════════════════════════════════
+Structure A - Classic Build:
+  Bars 0-3: Minimal intro (drums + 1 element)
+  Bars 4-7: Add layers gradually
+  Bars 8-11: Full drop
+
+Structure B - Immediate Drop:
+  Bars 0-3: Start heavy, full energy
+  Bars 4-7: Break down, filter sweeps
+  Bars 8-11: Build back up
+
+Structure C - Breakbeat:
+  Bars 0-2: Drum intro
+  Bars 3-5: Add bass and melody
+  Bars 6-7: Break/drop
+  Bars 8-11: Full arrangement
+
+Structure D - Progressive:
+  Bars 0-5: Slow build with evolving pads
+  Bars 6-7: Tension rise
+  Bars 8-11: Explosive drop
+
+Pick one and execute it perfectly!
+
+════════════════════════════════════════════════════════════════════════
+🎼 MELODIC VARIETY (IMPORTANT!)
+════════════════════════════════════════════════════════════════════════
+${randomKey} scale notes to use:
+- Root notes: C, D, E, F, G, A, B (adjust for key)
+- Octaves: 2 (bass), 3 (mid), 4 (melody), 5 (high leads)
+- Create DIFFERENT melodic patterns each time:
+  * Arpeggios: 1-3-5-7 patterns
+  * Scales runs: ascending/descending
+  * Call and response: question/answer phrases
+  * Rhythmic stabs: short, punchy notes
+  * Long pads: whole note sustains
+
+════════════════════════════════════════════════════════════════════════
+🎚️ MIX LEVELS
 ════════════════════════════════════════════════════════════════════════
 - Drums: 0.65-0.7
-- Bass: 0.6
+- Bass: 0.55-0.65
 - Leads: 0.45-0.55
-- Pads/FX: 0.25-0.35
-- Percussion: 0.5
+- Pads/FX: 0.25-0.4
+- Percussion: 0.5-0.6
 
 ════════════════════════════════════════════════════════════════════════
-✅ QUALITY CHECKLIST
+✅ VARIETY CHECKLIST
 ════════════════════════════════════════════════════════════════════════
-✓ Use AT LEAST 5 different instrument types
-✓ Use AT LEAST 8 different effect types across all tracks
-✓ Create dynamic arrangement (intro -> build -> drop)
-✓ Leave space - not every track plays every bar
-✓ Drum pitches: C2=kick, D2=snare, F#2=hats
-✓ Keep notes musical and purposeful (4-6 per clip)
-✓ Make it sound PROFESSIONAL and CLUB-READY
+✓ Use 5+ DIFFERENT instrument types
+✓ Use 8+ DIFFERENT effect types total
+✓ Create UNIQUE rhythm patterns (not the same as previous generations)
+✓ Vary note durations and velocities
+✓ Try unusual instrument/effect combos
+✓ Make melodic patterns memorable and different
+✓ Consider the random style: ${randomStyle}
+✓ Use the specified key: ${randomKey}
 
+REMEMBER: This track should sound COMPLETELY DIFFERENT from other generations!
         `);
 
 
