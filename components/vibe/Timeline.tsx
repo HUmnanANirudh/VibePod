@@ -21,29 +21,22 @@ export function Timeline() {
     const playheadPreviewRef = useRef(playheadPreview);
 
     useEffect(() => {
-        console.log('>>> useEffect triggered - draggingClip:', draggingClip, 'clipPreview:', clipPreview);
         draggingClipRef.current = draggingClip;
         clipPreviewRef.current = clipPreview;
         draggingPlayheadRef.current = draggingPlayhead;
         playheadPreviewRef.current = playheadPreview;
     }, [draggingClip, clipPreview, draggingPlayhead, playheadPreview]);
 
-    // Clear playheadPreview when currentBar updates (after seekTo completes)
     useEffect(() => {
         if (playheadPreview !== null && !draggingPlayhead && Math.abs(currentBar - playheadPreview) < 0.1) {
-            // currentBar has caught up to playheadPreview, safe to clear
             setPlayheadPreview(null);
         }
     }, [currentBar, playheadPreview, draggingPlayhead]);
 
     if (!project) return <div className="p-10 text-center">No Project Loaded</div>;
 
-    // Global mouse event handlers to prevent issues with mouse leaving container
     useEffect(() => {
         const handleGlobalMouseUp = () => {
-            console.log('Global mouseup - draggingClip:', draggingClipRef.current, 'clipPreview:', clipPreviewRef.current);
-            
-            // Commit clip position
             if (draggingClipRef.current && clipPreviewRef.current) {
                 const track = project.tracks.find(t => t.id === clipPreviewRef.current!.trackId);
                 if (track) {
@@ -52,23 +45,18 @@ export function Timeline() {
                         ...newClips[clipPreviewRef.current.clipIndex],
                         startBar: clipPreviewRef.current.startBar
                     };
-                    console.log('Global mouseup - updating track');
                     updateTrack(clipPreviewRef.current.trackId, { clips: newClips });
                 }
             }
             
-            // Commit playhead position
             if (draggingPlayheadRef.current && playheadPreviewRef.current !== null) {
                 seekTo(playheadPreviewRef.current);
-                // Don't clear playheadPreview immediately - it will clear when currentBar updates
             }
             
-            // Clear drag states (but keep playheadPreview until currentBar updates)
             setDraggingClip(null);
             setDraggingPlayhead(null);
             setClipPreview(null);
             
-            // Clear playheadPreview only if we weren't dragging the playhead
             if (!draggingPlayheadRef.current) {
                 setPlayheadPreview(null);
             }
@@ -82,27 +70,20 @@ export function Timeline() {
 
     const handleMouseDown = (e: React.MouseEvent, trackId: string, clipIndex: number, currentStartBar: number) => {
         e.stopPropagation();
-        console.log('=== MOUSE DOWN on clip:', trackId, clipIndex, 'at bar', currentStartBar);
-        const dragInfo = {
+        setDraggingClip({
             trackId,
             clipIndex,
             startX: e.clientX,
             originalStartBar: currentStartBar
-        };
-        const previewInfo = {
+        });
+        setClipPreview({
             trackId,
             clipIndex,
             startBar: currentStartBar
-        };
-        console.log('Setting draggingClip to:', dragInfo);
-        console.log('Setting clipPreview to:', previewInfo);
-        setDraggingClip(dragInfo);
-        setClipPreview(previewInfo);
-        console.log('=== State setters called');
+        });
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
-        // Handle playhead dragging
         if (draggingPlayhead) {
             const deltaX = e.clientX - draggingPlayhead.startX;
             const deltaBars = Math.round(deltaX / PIXELS_PER_BAR);
@@ -115,7 +96,6 @@ export function Timeline() {
             return;
         }
 
-        // Handle clip dragging
         if (!draggingClip) return;
         const deltaX = e.clientX - draggingClip.startX;
         const deltaBars = Math.round(deltaX / PIXELS_PER_BAR);
@@ -123,8 +103,6 @@ export function Timeline() {
         let newStartBar = draggingClip.originalStartBar + deltaBars;
         if (newStartBar < 0) newStartBar = 0;
         
-        console.log('Mouse move - updating clipPreview to bar', newStartBar);
-        // Store preview position instead of updating store directly
         setClipPreview({
             trackId: draggingClip.trackId,
             clipIndex: draggingClip.clipIndex,
@@ -134,15 +112,11 @@ export function Timeline() {
 
     const handlePlayheadMouseDown = (e: React.MouseEvent) => {
         e.stopPropagation();
-        console.log('=== PLAYHEAD MOUSE DOWN at bar:', currentBar, 'clientX:', e.clientX);
-        const dragInfo = {
+        setDraggingPlayhead({
             startX: e.clientX,
             originalBar: currentBar
-        };
-        console.log('Setting draggingPlayhead to:', dragInfo);
-        setDraggingPlayhead(dragInfo);
+        });
         setPlayheadPreview(currentBar);
-        console.log('=== Playhead state setters called');
     };
 
     const handleDrop = (e: React.DragEvent, trackId: string) => {
