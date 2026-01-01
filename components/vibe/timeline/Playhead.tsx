@@ -14,14 +14,11 @@ export const Playhead = React.memo(function Playhead({ currentBar, draggedPlayhe
   
   return (
     <div
-      className={cn(
-        "absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group",
-        draggingPlayhead ? "" : "transition-[left] duration-75 ease-linear"
-      )}
+      className="absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group"
       style={{
         left: position,
-        transform: 'translateZ(0)',
-        willChange: draggingPlayhead ? 'left' : 'auto'
+        transform: 'translate3d(0, 0, 0)', // Force GPU acceleration
+        willChange: 'left',
       }}
       onMouseDown={onMouseDown}
       title="Drag to scrub timeline"

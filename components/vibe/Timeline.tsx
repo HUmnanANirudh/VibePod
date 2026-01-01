@@ -62,19 +62,19 @@ export function Timeline() {
   }, [currentBar, project, totalBars]);
 
   useEffect(() => {
-    if (timelineScrollRef.current) {
-      const scrollContainer = timelineScrollRef.current;
-      const targetBar = draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar;
-      const playheadPosition = targetBar * PIXELS_PER_BAR;
-      const containerWidth = scrollContainer.clientWidth;
-      const centerPosition = playheadPosition - containerWidth / 2;
-      
-      scrollContainer.scrollTo({
-        left: Math.max(0, centerPosition),
-        behavior: draggingPlayhead ? 'auto' : 'smooth'
-      });
-    }
-  }, [currentBar, draggedPlayheadBar, draggingPlayhead]);
+    if (!draggingPlayhead || !timelineScrollRef.current) return;
+    
+    const scrollContainer = timelineScrollRef.current;
+    const targetBar = draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar;
+    const playheadPosition = targetBar * PIXELS_PER_BAR;
+    const containerWidth = scrollContainer.clientWidth;
+    const centerPosition = playheadPosition - containerWidth / 2;
+    
+    scrollContainer.scrollTo({
+      left: Math.max(0, centerPosition),
+      behavior: 'auto'
+    });
+  }, [draggedPlayheadBar, draggingPlayhead]);
 
   useEffect(() => {
     if (draggedPlayheadBar !== null && !draggingPlayhead && Math.abs(currentBar - draggedPlayheadBar) < 0.01) {

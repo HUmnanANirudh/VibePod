@@ -2,6 +2,7 @@ import { Copy, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LOOP_COLORS } from "@/lib/audioUtils";
 import type { Clip } from "@/lib/schema";
+import React from "react";
 
 interface TimelineClipProps {
   clip: Clip;
@@ -20,7 +21,7 @@ interface TimelineClipProps {
   copiedClip: any;
 }
 
-export function TimelineClip({
+export const TimelineClip = React.memo(function TimelineClip({
   clip,
   trackType,
   trackInstrumentType,
@@ -72,4 +73,4 @@ export function TimelineClip({
       </div>
     </div>
   );
-}
+});
