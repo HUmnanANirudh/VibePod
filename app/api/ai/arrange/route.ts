@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
             model: "gemini-2.5-flash-lite",
             generationConfig: {
                 responseMimeType: "application/json",
-                temperature: 1.2, // High temperature for creativity and variety
+                temperature: 1.2,
                 topP: 0.95,
                 topK: 40,
                 maxOutputTokens: 16384,

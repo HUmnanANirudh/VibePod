@@ -227,21 +227,6 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
                   <span className="ml-2 text-cyan-500/80 font-mono">{clip.durationBars} bars</span>
                 </div>
               </div>
-              <div>
-                <div className="text-[10px] font-bold tracking-widest text-zinc-600 uppercase mb-2">Note Data</div>
-                <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                  {clip.notes.map((note, idx) => (
-                    <div key={idx} className="text-xs bg-black/40 border border-zinc-800/50 rounded-sm px-2 py-1.5 flex justify-between items-center group hover:border-zinc-700 transition-colors">
-                      <span className="text-zinc-400 font-mono group-hover:text-cyan-400">{note.pitch}</span>
-                      <div className="flex gap-3 text-zinc-600 font-mono text-[10px]">
-                        <span>T: {note.startTime}</span>
-                        <span>D: {note.duration}</span>
-                        {note.velocity && <span>V: {Math.round(note.velocity * 100)}</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
           </div>
