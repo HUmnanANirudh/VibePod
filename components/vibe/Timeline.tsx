@@ -77,7 +77,8 @@ export function Timeline() {
   }, [currentBar, draggedPlayheadBar, draggingPlayhead]);
 
   useEffect(() => {
-    if (draggedPlayheadBar !== null && !draggingPlayhead && Math.abs(currentBar - draggedPlayheadBar) < 0.1) {
+    if (draggedPlayheadBar !== null && !draggingPlayhead && Math.abs(currentBar - draggedPlayheadBar) < 0.01) {
+      // Reset dragged playhead only after successful seek
       setDraggedPlayheadBar(null);
     }
   }, [currentBar, draggedPlayheadBar, draggingPlayhead, setDraggedPlayheadBar]);
@@ -100,7 +101,13 @@ export function Timeline() {
       }
 
       if (draggingPlayhead && draggedPlayheadBar !== null) {
-        seekTo(draggedPlayheadBar);
+        // Only seek if position actually changed
+        if (Math.abs(draggedPlayheadBar - draggingPlayhead.originalBar) > 0.1) {
+          seekTo(Math.floor(draggedPlayheadBar));
+        } else {
+          // Reset if no movement
+          setDraggedPlayheadBar(null);
+        }
       }
 
       setDraggingClip(null);
@@ -137,7 +144,7 @@ export function Timeline() {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (draggingPlayhead) {
       const deltaX = e.clientX - draggingPlayhead.startX;
-      const deltaBars = Math.round(deltaX / PIXELS_PER_BAR);
+      const deltaBars = deltaX / PIXELS_PER_BAR; // Don't round for smooth dragging
 
       let newBar = draggingPlayhead.originalBar + deltaBars;
       if (newBar < 0) newBar = 0;
@@ -170,11 +177,13 @@ export function Timeline() {
 
   const handlePlayheadMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+    const currentPosition = draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar;
     setDraggingPlayhead({
       startX: e.clientX,
-      originalBar: currentBar,
+      originalBar: currentPosition,
     });
-    setDraggedPlayheadBar(currentBar);
+    setDraggedPlayheadBar(currentPosition);
   };
 
   const handleDrop = (e: React.DragEvent, trackId: string) => {

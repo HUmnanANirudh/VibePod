@@ -288,17 +288,23 @@ export function useAudioEngine() {
         }
     }, [seekRequest]);
 
-    // Update Progress with smooth animation frame
+    // Update Progress with optimized animation frame
     useEffect(() => {
         let animationFrameId: number;
+        let lastUpdate = 0;
+        const throttleMs = 16; // ~60fps
         
-        const updatePlayhead = () => {
-            if (Tone.getTransport().state === 'started') {
-                const position = Tone.getTransport().position.toString().split(':');
-                const bars = parseInt(position[0]);
-                const beats = parseInt(position[1]);
-                const sixteenths = parseFloat(position[2]);
-                setCurrentBar(bars + beats / 4 + sixteenths / 16);
+        const updatePlayhead = (timestamp: number) => {
+            // Throttle updates to reduce re-renders
+            if (timestamp - lastUpdate >= throttleMs) {
+                if (Tone.getTransport().state === 'started') {
+                    const position = Tone.getTransport().position.toString().split(':');
+                    const bars = parseInt(position[0]);
+                    const beats = parseInt(position[1]);
+                    const sixteenths = parseFloat(position[2]);
+                    setCurrentBar(bars + beats / 4 + sixteenths / 16);
+                }
+                lastUpdate = timestamp;
             }
             animationFrameId = requestAnimationFrame(updatePlayhead);
         };

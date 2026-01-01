@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { useAudioStore } from '@/store/useAudioStore';
+import { useEffect, useState } from 'react';
 
 interface ClipEditorProps {
   open: boolean;
@@ -60,8 +59,6 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
       setPitch(clip.pitch || 0);
       setEffect(clip.effect || 'None');
       setEffectAmount(clip.effectAmount || 0.5);
-      
-      // Extract unique pitches from clip notes
       const clipPitches = clip.notes.map(note => note.pitch);
       const uniquePitches = Array.from(new Set(clipPitches));
       setAvailableChords([...new Set([...uniquePitches, ...CHORDS])]);
@@ -119,7 +116,7 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
            <div className="absolute inset-0 pointer-events-none bg-linear-to-br from-white/5 to-transparent z-0"></div>
            <div className="relative z-10 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="chord" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+            <Label htmlFor="chord" className="text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
               Chord Selection
             </Label>
             <Select value={chord} onValueChange={setChord}>
@@ -142,7 +139,7 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="pitch" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+              <Label htmlFor="pitch" className="text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
                 Pitch Offset
               </Label>
               <span className="text-xs text-cyan-500/80 font-mono bg-zinc-950 px-2 py-0.5 rounded-sm border border-zinc-800 shadow-inner">{pitch > 0 ? '+' : ''}{pitch} semitones</span>
@@ -160,7 +157,7 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="volume" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+              <Label htmlFor="volume" className="text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
                 Gain Level
               </Label>
               <span className="text-xs text-cyan-500/80 font-mono bg-zinc-950 px-2 py-0.5 rounded-sm border border-zinc-800 shadow-inner">{Math.round(volume * 100)}%</span>
@@ -177,7 +174,7 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="effect" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+            <Label htmlFor="effect" className="text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
               FX Processor
             </Label>
             <Select value={effect} onValueChange={setEffect}>
@@ -201,7 +198,7 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
           {effect !== 'None' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="effectAmount" className="text-zinc-300 text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
+                <Label htmlFor="effectAmount" className="text-sm font-semibold tracking-tight uppercase text-[10px] text-cyan-500/80">
                   Dry / Wet
                 </Label>
                 <span className="text-xs text-cyan-500/80 font-mono bg-zinc-950 px-2 py-0.5 rounded-sm border border-zinc-800 shadow-inner">{Math.round(effectAmount * 100)}%</span>

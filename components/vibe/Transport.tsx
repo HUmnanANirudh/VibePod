@@ -112,16 +112,6 @@ export function Transport({ initAudio }: TransportProps) {
                     >
                         {isPlaying ? <Pause className="fill-current h-6 w-6" /> : <Play className="fill-current h-6 w-6 ml-1" />}
                     </Button>
-
-                    <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="h-10 w-10 rounded-full bg-zinc-800 border-2 border-zinc-700 text-zinc-500 hover:text-red-500 hover:bg-zinc-700 shadow-md active:shadow-inner active:translate-y-px"
-                        onClick={stop}
-                    >
-                        <Square className="h-3 w-3 fill-current" />
-                    </Button>
-
                     <Button 
                         size="icon" 
                         variant="ghost" 

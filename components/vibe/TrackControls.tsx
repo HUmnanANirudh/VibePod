@@ -1,17 +1,20 @@
 import { Slider } from '@/components/ui/slider';
 import { Toggle } from '@/components/ui/toggle';
+import { Button } from '@/components/ui/button';
 import { LOOP_COLORS } from '@/lib/audioUtils';
 import { Track } from '@/lib/schema';
 import { cn } from '@/lib/utils';
 import { useAudioStore } from '@/store/useAudioStore';
 import { ScrollArea } from '../ui/scroll-area';
+import { SkipBack, SkipForward } from 'lucide-react';
+import * as Tone from 'tone';
 
 interface TrackControlsProps {
     track: Track;
 }
 
 export function TrackControls({ track }: TrackControlsProps) {
-    const { updateTrack } = useAudioStore();
+    const { updateTrack, seekTo, currentBar } = useAudioStore();
 
     const handleMuteToggle = (muted: boolean) => {
         console.log(`Track ${track.id} muted:`, muted);
@@ -22,7 +25,6 @@ export function TrackControls({ track }: TrackControlsProps) {
         console.log(`Track ${track.id} volume:`, value[0]);
         updateTrack(track.id, { volume: value[0] });
     };
-
     return (
         <ScrollArea className="w-56 shrink-0 flex flex-col p-3 border-r border-zinc-800 bg-linear-to-r from-zinc-900 to-zinc-800/50 gap-2 relative group">
             <div className="flex items-center gap-2 mb-1">
@@ -37,7 +39,6 @@ export function TrackControls({ track }: TrackControlsProps) {
                     <p className="text-[10px] text-zinc-600 truncate font-mono" title={track.instrument?.type}>{track.instrument?.type}</p>
                 </div>
             </div>
-            
             <div className="flex items-center gap-2">
                 <Toggle 
                     size="sm" 

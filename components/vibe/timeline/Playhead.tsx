@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import React from "react";
 
 interface PlayheadProps {
   currentBar: number;
@@ -8,15 +9,19 @@ interface PlayheadProps {
   onMouseDown: (e: React.MouseEvent) => void;
 }
 
-export function Playhead({ currentBar, draggedPlayheadBar, pixelsPerBar, draggingPlayhead, onMouseDown }: PlayheadProps) {
+export const Playhead = React.memo(function Playhead({ currentBar, draggedPlayheadBar, pixelsPerBar, draggingPlayhead, onMouseDown }: PlayheadProps) {
+  const position = (draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar) * pixelsPerBar;
+  
   return (
     <div
       className={cn(
         "absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group",
-        draggingPlayhead ? "" : "transition-all duration-75"
+        draggingPlayhead ? "" : "transition-[left] duration-75 ease-linear"
       )}
       style={{
-        left: (draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar) * pixelsPerBar,
+        left: position,
+        transform: 'translateZ(0)',
+        willChange: draggingPlayhead ? 'left' : 'auto'
       }}
       onMouseDown={onMouseDown}
       title="Drag to scrub timeline"
@@ -26,4 +31,4 @@ export function Playhead({ currentBar, draggedPlayheadBar, pixelsPerBar, draggin
       <div className="absolute -left-0.5 top-0 bottom-0 w-0.5 bg-cyan-500 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] group-hover:w-1 group-hover:shadow-[0_0_15px_3px_rgba(6,182,212,0.6)] transition-all"></div>
     </div>
   );
-}
+});
