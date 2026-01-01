@@ -15,11 +15,9 @@ interface TransportProps {
 export function Transport({ initAudio }: TransportProps) {
     const { isPlaying, setIsPlaying, project, setProject, currentBar, draggedPlayheadBar, resetProject, seekTo } = useAudioStore();
     
-    // Format bars:beats:sixteenths
     const formatTime = (totalBars: number) => {
         const bars = Math.floor(totalBars).toString().padStart(2, '0');
-        const beats = Math.floor((totalBars % 1) * 4).toString();
-        // and sixteenths... 
+        const beats = Math.floor((totalBars % 1) * 4).toString(); 
         const sixteenths = Math.floor(((totalBars % 1) * 4 % 1) * 4).toString();
         return `${bars}:${beats}:${sixteenths}`;
     };
@@ -35,11 +33,8 @@ export function Transport({ initAudio }: TransportProps) {
 
     const togglePlay = async () => {
         try {
-            // Explicitly start Tone.js (required for browser autoplay policy)
             await start();
             await initAudio();
-            
-            // Ensure AudioContext is running
             if (getContext().state !== 'running') {
                 await getContext().resume();
             }

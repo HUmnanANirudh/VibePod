@@ -45,10 +45,11 @@ export function Timeline() {
   }, [currentBar, project, totalBars]);
 
   useEffect(() => {
-    // Only auto-center during playback, not during drag
-    if (timelineScrollRef.current && !draggingPlayhead && !draggedPlayheadBar) {
+    if (timelineScrollRef.current && !draggingPlayhead) {
       const scrollContainer = timelineScrollRef.current;
-      const playheadPosition = currentBar * PIXELS_PER_BAR;
+      // Use draggedPlayheadBar when it exists (after drag release), otherwise use currentBar
+      const targetBar = draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar;
+      const playheadPosition = targetBar * PIXELS_PER_BAR;
       const containerWidth = scrollContainer.clientWidth;
       const centerPosition = playheadPosition - containerWidth / 2;
       
@@ -57,16 +58,15 @@ export function Timeline() {
         behavior: 'smooth'
       });
     }
-  }, [currentBar, draggingPlayhead, draggedPlayheadBar]);
+  }, [currentBar, draggedPlayheadBar, draggingPlayhead]);
 
   useEffect(() => {
-    // Clear draggedPlayheadBar once currentBar has caught up to it
-    if (draggedPlayheadBar !== null && !draggingPlayhead && Math.abs(currentBar - draggedPlayheadBar) < 1) {
+    // Clear draggedPlayheadBar once currentBar has caught up after seek
+    if (draggedPlayheadBar !== null && !draggingPlayhead && Math.abs(currentBar - draggedPlayheadBar) < 0.1) {
+      console.log('Clearing draggedPlayheadBar, currentBar caught up:', currentBar);
       setDraggedPlayheadBar(null);
     }
   }, [currentBar, draggedPlayheadBar, draggingPlayhead, setDraggedPlayheadBar]);
-
-
 
   if (!project)
     return <div className="p-10 text-center">No Project Loaded</div>;
@@ -86,7 +86,9 @@ export function Timeline() {
       }
 
       if (draggingPlayhead && draggedPlayheadBar !== null) {
-        seekTo(draggedPlayheadBar);
+        console.log('Seeking to:', draggedPlayheadBar);
+        seekTo(draggedPlayheadBar); // Seek to final dragged position
+        // Don't clear draggedPlayheadBar here - let it persist until currentBar catches up
       }
 
       setDraggingClip(null);
@@ -98,7 +100,7 @@ export function Timeline() {
     return () => {
       document.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [project, updateTrack, seekTo, draggingClip, clipPreview, draggingPlayhead, draggedPlayheadBar]);
+  }, [project, updateTrack, seekTo, setDraggedPlayheadBar, draggingClip, clipPreview, draggingPlayhead, draggedPlayheadBar]);
 
   const handleMouseDown = (
     e: React.MouseEvent,
@@ -132,6 +134,8 @@ export function Timeline() {
         setTotalBars(prev => prev + 32);
       }
 
+      console.log('Dragging to bar:', newBar);
+      // Update global state during drag
       setDraggedPlayheadBar(newBar);
       return;
     }
@@ -142,8 +146,7 @@ export function Timeline() {
 
     let newStartBar = draggingClip.originalStartBar + deltaBars;
     if (newStartBar < 0) newStartBar = 0;
-    
-    // Extend timeline if dragging clip beyond current end
+
     if (newStartBar >= totalBars - 8) {
       setTotalBars(prev => prev + 32);
     }
@@ -157,11 +160,14 @@ export function Timeline() {
 
   const handlePlayheadMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Use draggedPlayheadBar if it exists (more accurate), otherwise currentBar
+    const startBar = draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar;
+    console.log('Playhead mousedown', startBar);
     setDraggingPlayhead({
       startX: e.clientX,
-      originalBar: currentBar,
+      originalBar: startBar,
     });
-    setDraggedPlayheadBar(currentBar);
+    setDraggedPlayheadBar(startBar);
   };
 
   const handleDrop = (e: React.DragEvent, trackId: string) => {
@@ -177,7 +183,6 @@ export function Timeline() {
 
       const track = project.tracks.find((t) => t.id === trackId);
       if (track) {
-        // Check if position is occupied
         const isOccupied = track.clips.some(
           (c) => dropBar >= c.startBar && dropBar < c.startBar + c.durationBars
         );
@@ -343,7 +348,6 @@ export function Timeline() {
               </div>
             ))}
             
-            {/* Playhead - Wider drag area for easier grabbing */}
             <div
               className={cn(
                 "absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group",
@@ -357,11 +361,8 @@ export function Timeline() {
               onMouseDown={handlePlayheadMouseDown}
               title="Drag to scrub timeline"
             >
-              {/* Wider invisible hit area - 40px total for easier grabbing */}
               <div className="absolute -left-5 top-0 bottom-0 w-10"></div>
-              {/* Triangle pointer at top */}
               <div className="absolute top-0 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-cyan-500"></div>
-              {/* Visible playhead line */}
               <div className="absolute -left-0.5 top-0 bottom-0 w-0.5 bg-cyan-500 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] group-hover:w-1 group-hover:shadow-[0_0_15px_3px_rgba(6,182,212,0.6)] transition-all"></div>
             </div>
           </div>
