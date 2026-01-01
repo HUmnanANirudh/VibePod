@@ -17,6 +17,11 @@ export const ClipSchema = z.object({
   startBar: z.number().int().min(0),
   durationBars: z.number().int().min(1),
   notes: z.array(NoteSchema),
+  volume: z.number().min(0).max(1).optional().default(0.8),
+  chord: z.string().optional(),
+  pitch: z.number().int().optional().default(0),
+  effect: z.string().optional().default('None'),
+  effectAmount: z.number().min(0).max(1).optional().default(0.5),
 });
 
 export type Clip = z.infer<typeof ClipSchema>;

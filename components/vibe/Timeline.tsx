@@ -1,9 +1,14 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useAudioStore } from "@/store/useAudioStore";
 import { TrackControls } from "./TrackControls";
+import { ClipEditor } from "./ClipEditor";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import { LOOP_COLORS } from "@/lib/audioUtils";
+import { CopiedClipIndicator } from "./timeline/CopiedClipIndicator";
+import { DeleteClipDialog } from "./timeline/DeleteClipDialog";
+import { TimelineRuler } from "./timeline/TimelineRuler";
+import { Playhead } from "./timeline/Playhead";
+import { TimelineClip } from "./timeline/TimelineClip";
+import { TimelineGrid } from "./timeline/TimelineGrid";
 
 const PIXELS_PER_BAR = 120;
 const INITIAL_BARS = 128;
@@ -26,6 +31,18 @@ export function Timeline() {
     clipIndex: number;
     startBar: number;
   } | null>(null);
+  const [copiedClip, setCopiedClip] = useState<{
+    trackId: string;
+    clip: any;
+  } | null>(null);
+  const [selectedClip, setSelectedClip] = useState<{
+    trackId: string;
+    clipIndex: number;
+  } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    trackId: string;
+    clipIndex: number;
+  } | null>(null);
 
   const timelineScrollRef = useRef<HTMLDivElement>(null);
 
@@ -45,9 +62,8 @@ export function Timeline() {
   }, [currentBar, project, totalBars]);
 
   useEffect(() => {
-    if (timelineScrollRef.current && !draggingPlayhead) {
+    if (timelineScrollRef.current) {
       const scrollContainer = timelineScrollRef.current;
-      // Use draggedPlayheadBar when it exists (after drag release), otherwise use currentBar
       const targetBar = draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar;
       const playheadPosition = targetBar * PIXELS_PER_BAR;
       const containerWidth = scrollContainer.clientWidth;
@@ -55,15 +71,13 @@ export function Timeline() {
       
       scrollContainer.scrollTo({
         left: Math.max(0, centerPosition),
-        behavior: 'smooth'
+        behavior: draggingPlayhead ? 'auto' : 'smooth'
       });
     }
   }, [currentBar, draggedPlayheadBar, draggingPlayhead]);
 
   useEffect(() => {
-    // Clear draggedPlayheadBar once currentBar has caught up after seek
     if (draggedPlayheadBar !== null && !draggingPlayhead && Math.abs(currentBar - draggedPlayheadBar) < 0.1) {
-      console.log('Clearing draggedPlayheadBar, currentBar caught up:', currentBar);
       setDraggedPlayheadBar(null);
     }
   }, [currentBar, draggedPlayheadBar, draggingPlayhead, setDraggedPlayheadBar]);
@@ -86,9 +100,7 @@ export function Timeline() {
       }
 
       if (draggingPlayhead && draggedPlayheadBar !== null) {
-        console.log('Seeking to:', draggedPlayheadBar);
-        seekTo(draggedPlayheadBar); // Seek to final dragged position
-        // Don't clear draggedPlayheadBar here - let it persist until currentBar catches up
+        seekTo(draggedPlayheadBar);
       }
 
       setDraggingClip(null);
@@ -134,8 +146,6 @@ export function Timeline() {
         setTotalBars(prev => prev + 32);
       }
 
-      console.log('Dragging to bar:', newBar);
-      // Update global state during drag
       setDraggedPlayheadBar(newBar);
       return;
     }
@@ -160,14 +170,11 @@ export function Timeline() {
 
   const handlePlayheadMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Use draggedPlayheadBar if it exists (more accurate), otherwise currentBar
-    const startBar = draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar;
-    console.log('Playhead mousedown', startBar);
     setDraggingPlayhead({
       startX: e.clientX,
-      originalBar: startBar,
+      originalBar: currentBar,
     });
-    setDraggedPlayheadBar(startBar);
+    setDraggedPlayheadBar(currentBar);
   };
 
   const handleDrop = (e: React.DragEvent, trackId: string) => {
@@ -194,6 +201,10 @@ export function Timeline() {
                 startBar: dropBar,
                 durationBars: 2,
                 notes: [],
+                volume: 0.8,
+                pitch: 0,
+                effect: 'None',
+                effectAmount: 0.5,
               },
             ],
           });
@@ -210,6 +221,11 @@ export function Timeline() {
   };
 
   const handleTrackClick = (trackId: string, e: React.MouseEvent) => {
+    if (copiedClip && (e.ctrlKey || e.metaKey)) {
+      pasteClip(e, trackId);
+      return;
+    }
+
     const bounds = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - bounds.left;
     const clickedBar = Math.floor(x / PIXELS_PER_BAR);
@@ -224,7 +240,15 @@ export function Timeline() {
         updateTrack(trackId, {
           clips: [
             ...track.clips,
-            { startBar: clickedBar, durationBars: 1, notes: [] },
+            { 
+              startBar: clickedBar, 
+              durationBars: 1, 
+              notes: [],
+              volume: 0.8,
+              pitch: 0,
+              effect: 'None',
+              effectAmount: 0.5,
+            },
           ],
         });
       }
@@ -237,35 +261,73 @@ export function Timeline() {
     clipIndex: number
   ) => {
     e.stopPropagation();
-    if (e.shiftKey || e.button === 2) {
-      e.preventDefault();
-      const track = project.tracks.find((t) => t.id === trackId);
-      if (track) {
-        const newClips = [...track.clips];
-        newClips.splice(clipIndex, 1);
-        updateTrack(trackId, { clips: newClips });
+    setDeleteConfirm({ trackId, clipIndex });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteConfirm) return;
+    const { trackId, clipIndex } = deleteConfirm;
+    const track = project.tracks.find((t) => t.id === trackId);
+    if (track) {
+      const newClips = [...track.clips];
+      newClips.splice(clipIndex, 1);
+      updateTrack(trackId, { clips: newClips });
+    }
+    setDeleteConfirm(null);
+  };
+
+  const copyClip = (e: React.MouseEvent, trackId: string, clipIndex: number) => {
+    e.stopPropagation();
+    const track = project.tracks.find((t) => t.id === trackId);
+    if (track) {
+      setCopiedClip({ trackId, clip: { ...track.clips[clipIndex] } });
+      const button = e.currentTarget as HTMLElement;
+      button.style.background = '#10b981';
+      button.style.borderColor = '#059669';
+      setTimeout(() => {
+        button.style.background = '';
+        button.style.borderColor = '';
+      }, 300);
+      setTimeout(() => {
+        setCopiedClip(null);
+      }, 5000);
+    }
+  };
+
+  const pasteClip = (e: React.MouseEvent, targetTrackId: string) => {
+    e.stopPropagation();
+    if (!copiedClip) return;
+
+    const bounds = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - bounds.left;
+    const pasteBar = Math.floor(x / PIXELS_PER_BAR);
+
+    const track = project.tracks.find((t) => t.id === targetTrackId);
+    if (track) {
+      const isOccupied = track.clips.some(
+        (c) => pasteBar >= c.startBar && pasteBar < c.startBar + c.durationBars
+      );
+      if (!isOccupied) {
+        updateTrack(targetTrackId, {
+          clips: [
+            ...track.clips,
+            { ...copiedClip.clip, startBar: pasteBar },
+          ],
+        });
       }
     }
   };
 
+  const handleClipClick = (e: React.MouseEvent, trackId: string, clipIndex: number) => {
+    e.stopPropagation();
+    setSelectedClip({ trackId, clipIndex });
+  };
+
   return (
     <div className="flex-1 bg-zinc-950 relative select-none flex flex-col h-full">
-      <div className="flex h-8 border-b border-zinc-800 bg-zinc-900/90 backdrop-blur z-10 shadow-lg shrink-0">
-        <div className="w-56 shrink-0 border-r border-zinc-800"></div>
-        <ScrollArea className="flex-1" orientation="horizontal">
-          <div className="flex h-8" style={{ width: totalBars * PIXELS_PER_BAR }}>
-            {Array.from({ length: totalBars }).map((_, i) => (
-              <div
-                key={i}
-                className="shrink-0 border-l border-zinc-700/50 px-1 text-[10px] font-mono text-zinc-500"
-                style={{ width: PIXELS_PER_BAR }}
-              >
-                {i + 1}
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
+      <CopiedClipIndicator show={!!copiedClip} />
+      
+      <TimelineRuler totalBars={totalBars} pixelsPerBar={PIXELS_PER_BAR} />
       <div className="flex-1 flex min-h-0">
         <ScrollArea className="w-56shrink-0 border-r border-zinc-800 bg-zinc-950 overflow-y-auto">
           <div className="flex flex-col">
@@ -299,15 +361,7 @@ export function Timeline() {
                   onDrop={(e) => handleDrop(e, track.id)}
                   onDragOver={handleDragOver}
                 >
-                  <div className="absolute inset-0 flex pointer-events-none">
-                    {Array.from({ length: totalBars }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="shrink-0 border-r border-dashed border-zinc-800/30 h-full"
-                        style={{ width: PIXELS_PER_BAR }}
-                      ></div>
-                    ))}
-                  </div>
+                  <TimelineGrid totalBars={totalBars} pixelsPerBar={PIXELS_PER_BAR} />
 
                   {track.clips.map((clip, idx) => {
                     const isBeingDragged =
@@ -317,57 +371,57 @@ export function Timeline() {
                     const displayStartBar = isBeingDragged
                       ? clipPreview.startBar
                       : clip.startBar;
+                    const isCopied = copiedClip?.trackId === track.id && copiedClip?.clip.startBar === clip.startBar;
 
                     return (
-                      <div
+                      <TimelineClip
                         key={`${clip.startBar}-${idx}`}
-                        className={cn(
-                          "absolute top-1 bottom-1 rounded border-t border-white/20 border-b shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center overflow-hidden",
-                          LOOP_COLORS[track.type] || "bg-zinc-700",
-                          "after:absolute after:inset-0 after:bg-linear-to-b after:from-white/10 after:to-transparent hover:brightness-110",
-                          isBeingDragged ? "" : "transition-all"
-                        )}
-                        style={{
-                          left: displayStartBar * PIXELS_PER_BAR,
-                          width: clip.durationBars * PIXELS_PER_BAR,
-                        }}
-                        onMouseDown={(e) =>
-                          handleMouseDown(e, track.id, idx, clip.startBar)
-                        }
-                        onContextMenu={(e) => deleteClip(e, track.id, idx)}
-                        onClick={(e) => e.stopPropagation()}
-                        title="Drag to move, Shift+Click or Right Click to delete"
-                      >
-                        <div className="relative z-10 text-white/90 text-[10px] font-bold pointer-events-none truncate px-2 drop-shadow-md">
-                          {track.instrument?.type || "Clip"}
-                        </div>
-                      </div>
+                        clip={clip}
+                        clipIndex={idx}
+                        trackId={track.id}
+                        trackType={track.type}
+                        trackInstrumentType={track.instrument?.type}
+                        displayStartBar={displayStartBar}
+                        pixelsPerBar={PIXELS_PER_BAR}
+                        isBeingDragged={!!isBeingDragged}
+                        isCopied={isCopied}
+                        onMouseDown={(e) => handleMouseDown(e, track.id, idx, clip.startBar)}
+                        onClick={(e) => handleClipClick(e, track.id, idx)}
+                        onCopy={(e) => copyClip(e, track.id, idx)}
+                        onDelete={(e) => deleteClip(e, track.id, idx)}
+                        copiedClip={copiedClip}
+                      />
                     );
                   })}
                 </div>
               </div>
             ))}
             
-            <div
-              className={cn(
-                "absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group",
-                draggingPlayhead ? "" : "transition-all duration-75"
-              )}
-              style={{
-                left:
-                  (draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar) *
-                  PIXELS_PER_BAR,
-              }}
+            <Playhead
+              currentBar={currentBar}
+              draggedPlayheadBar={draggedPlayheadBar}
+              pixelsPerBar={PIXELS_PER_BAR}
+              draggingPlayhead={!!draggingPlayhead}
               onMouseDown={handlePlayheadMouseDown}
-              title="Drag to scrub timeline"
-            >
-              <div className="absolute -left-5 top-0 bottom-0 w-10"></div>
-              <div className="absolute top-0 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-cyan-500"></div>
-              <div className="absolute -left-0.5 top-0 bottom-0 w-0.5 bg-cyan-500 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] group-hover:w-1 group-hover:shadow-[0_0_15px_3px_rgba(6,182,212,0.6)] transition-all"></div>
-            </div>
+            />
           </div>
         </div>
       </div>
+
+      {selectedClip && (
+        <ClipEditor
+          open={true}
+          onClose={() => setSelectedClip(null)}
+          trackId={selectedClip.trackId}
+          clipIndex={selectedClip.clipIndex}
+        />
+      )}
+
+      <DeleteClipDialog
+        open={!!deleteConfirm}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }
