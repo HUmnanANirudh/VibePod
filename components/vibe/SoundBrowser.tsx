@@ -1,30 +1,24 @@
-import React, { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Music4,
-  Search,
-  ChevronDown,
-  ChevronRight,
-  Play,
-  Volume2,
-} from "lucide-react";
 import {
   getCategories,
   getSoundsByCategory,
   searchSounds,
   SoundPreset,
 } from "@/lib/soundLibrary";
-import * as Tone from "tone";
 import { cn } from "@/lib/utils";
+import {
+  Music4,
+  Play,
+  Search,
+  Volume2
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import * as Tone from "tone";
 
-interface SoundBrowserProps {
-  onSoundDrop?: (sound: SoundPreset) => void;
-}
-
-export function SoundBrowser({ onSoundDrop }: SoundBrowserProps) {
+export function SoundBrowser() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(["Drums"])
+    new Set()
   );
   const [playingSound, setPlayingSound] = useState<string | null>(null);
   const [draggingSound, setDraggingSound] = useState<SoundPreset | null>(null);
