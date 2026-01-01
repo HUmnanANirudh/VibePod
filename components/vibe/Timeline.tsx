@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useAudioStore } from '@/store/useAudioStore';
 import { TrackControls } from './TrackControls';
 import { cn } from '@/lib/utils';
@@ -12,17 +12,93 @@ export function Timeline() {
     const [draggingClip, setDraggingClip] = useState<{ trackId: string, clipIndex: number, startX: number, originalStartBar: number } | null>(null);
     const [draggingPlayhead, setDraggingPlayhead] = useState<{ startX: number, originalBar: number } | null>(null);
     const [playheadPreview, setPlayheadPreview] = useState<number | null>(null);
+    const [clipPreview, setClipPreview] = useState<{ trackId: string, clipIndex: number, startBar: number } | null>(null);
+
+    // Refs to store current values for event handlers
+    const draggingClipRef = useRef(draggingClip);
+    const clipPreviewRef = useRef(clipPreview);
+    const draggingPlayheadRef = useRef(draggingPlayhead);
+    const playheadPreviewRef = useRef(playheadPreview);
+
+    useEffect(() => {
+        console.log('>>> useEffect triggered - draggingClip:', draggingClip, 'clipPreview:', clipPreview);
+        draggingClipRef.current = draggingClip;
+        clipPreviewRef.current = clipPreview;
+        draggingPlayheadRef.current = draggingPlayhead;
+        playheadPreviewRef.current = playheadPreview;
+    }, [draggingClip, clipPreview, draggingPlayhead, playheadPreview]);
+
+    // Clear playheadPreview when currentBar updates (after seekTo completes)
+    useEffect(() => {
+        if (playheadPreview !== null && !draggingPlayhead && Math.abs(currentBar - playheadPreview) < 0.1) {
+            // currentBar has caught up to playheadPreview, safe to clear
+            setPlayheadPreview(null);
+        }
+    }, [currentBar, playheadPreview, draggingPlayhead]);
 
     if (!project) return <div className="p-10 text-center">No Project Loaded</div>;
 
+    // Global mouse event handlers to prevent issues with mouse leaving container
+    useEffect(() => {
+        const handleGlobalMouseUp = () => {
+            console.log('Global mouseup - draggingClip:', draggingClipRef.current, 'clipPreview:', clipPreviewRef.current);
+            
+            // Commit clip position
+            if (draggingClipRef.current && clipPreviewRef.current) {
+                const track = project.tracks.find(t => t.id === clipPreviewRef.current!.trackId);
+                if (track) {
+                    const newClips = [...track.clips];
+                    newClips[clipPreviewRef.current.clipIndex] = {
+                        ...newClips[clipPreviewRef.current.clipIndex],
+                        startBar: clipPreviewRef.current.startBar
+                    };
+                    console.log('Global mouseup - updating track');
+                    updateTrack(clipPreviewRef.current.trackId, { clips: newClips });
+                }
+            }
+            
+            // Commit playhead position
+            if (draggingPlayheadRef.current && playheadPreviewRef.current !== null) {
+                seekTo(playheadPreviewRef.current);
+                // Don't clear playheadPreview immediately - it will clear when currentBar updates
+            }
+            
+            // Clear drag states (but keep playheadPreview until currentBar updates)
+            setDraggingClip(null);
+            setDraggingPlayhead(null);
+            setClipPreview(null);
+            
+            // Clear playheadPreview only if we weren't dragging the playhead
+            if (!draggingPlayheadRef.current) {
+                setPlayheadPreview(null);
+            }
+        };
+
+        document.addEventListener('mouseup', handleGlobalMouseUp);
+        return () => {
+            document.removeEventListener('mouseup', handleGlobalMouseUp);
+        };
+    }, [project, updateTrack, seekTo]);
+
     const handleMouseDown = (e: React.MouseEvent, trackId: string, clipIndex: number, currentStartBar: number) => {
         e.stopPropagation();
-        setDraggingClip({
+        console.log('=== MOUSE DOWN on clip:', trackId, clipIndex, 'at bar', currentStartBar);
+        const dragInfo = {
             trackId,
             clipIndex,
             startX: e.clientX,
             originalStartBar: currentStartBar
-        });
+        };
+        const previewInfo = {
+            trackId,
+            clipIndex,
+            startBar: currentStartBar
+        };
+        console.log('Setting draggingClip to:', dragInfo);
+        console.log('Setting clipPreview to:', previewInfo);
+        setDraggingClip(dragInfo);
+        setClipPreview(previewInfo);
+        console.log('=== State setters called');
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -47,39 +123,26 @@ export function Timeline() {
         let newStartBar = draggingClip.originalStartBar + deltaBars;
         if (newStartBar < 0) newStartBar = 0;
         
-        // Update store logic would be debounced ideally, but here direct.
-        // We only commit on MouseUp to avoid excessive store updates/re-renders or maybe just local state?
-        // Let's do live update for "wow" factor, but need to be careful with store perf.
-        // Actually, let's just update on mouse up for safety, or use a local 'preview' offset.
-        // But implementing 'preview' is extra code. I'll update store.
-        
-        const track = project.tracks.find(t => t.id === draggingClip.trackId);
-        if (track) {
-            const newClips = [...track.clips];
-            newClips[draggingClip.clipIndex] = {
-                ...newClips[draggingClip.clipIndex],
-                startBar: newStartBar
-            };
-            updateTrack(draggingClip.trackId, { clips: newClips });
-        }
-    };
-
-    const handleMouseUp = () => {
-        // Commit playhead position on mouse up
-        if (draggingPlayhead && playheadPreview !== null) {
-            seekTo(playheadPreview);
-        }
-        setDraggingClip(null);
-        setDraggingPlayhead(null);
-        setPlayheadPreview(null);
+        console.log('Mouse move - updating clipPreview to bar', newStartBar);
+        // Store preview position instead of updating store directly
+        setClipPreview({
+            trackId: draggingClip.trackId,
+            clipIndex: draggingClip.clipIndex,
+            startBar: newStartBar
+        });
     };
 
     const handlePlayheadMouseDown = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setDraggingPlayhead({
+        console.log('=== PLAYHEAD MOUSE DOWN at bar:', currentBar, 'clientX:', e.clientX);
+        const dragInfo = {
             startX: e.clientX,
             originalBar: currentBar
-        });
+        };
+        console.log('Setting draggingPlayhead to:', dragInfo);
+        setDraggingPlayhead(dragInfo);
+        setPlayheadPreview(currentBar);
+        console.log('=== Playhead state setters called');
     };
 
     const handleDrop = (e: React.DragEvent, trackId: string) => {
@@ -154,6 +217,11 @@ export function Timeline() {
         }
     }
 
+    const handleMouseLeave = () => {
+        // Don't do anything - let global mouseup handle everything
+        console.log('Mouse leave - waiting for mouseup');
+    };
+
     return (
         <div 
             className="flex-1 overflow-auto bg-zinc-950 relative select-none"
@@ -162,8 +230,7 @@ export function Timeline() {
                 backgroundSize: '24px 24px'
             }}
             onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
         >
             <div className="flex flex-col min-w-max">
                  {/* Ruler */}
@@ -195,28 +262,35 @@ export function Timeline() {
                                 </div>
                                 
                                 {/* Clips */}
-                                {track.clips.map((clip, idx) => (
-                                    <div
-                                        key={`${clip.startBar}-${idx}`}
-                                        className={cn(
-                                            "absolute top-1 bottom-1 rounded border-t border-white/20 border-b shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center overflow-hidden",
-                                            LOOP_COLORS[track.type] || "bg-zinc-700",
-                                            "after:absolute after:inset-0 after:bg-linear-to-b after:from-white/10 after:to-transparent hover:brightness-110 transition-all",
-                                        )}
-                                        style={{
-                                            left: clip.startBar * PIXELS_PER_BAR,
-                                            width: clip.durationBars * PIXELS_PER_BAR
-                                        }}
-                                        onMouseDown={(e) => handleMouseDown(e, track.id, idx, clip.startBar)}
-                                        onContextMenu={(e) => deleteClip(e, track.id, idx)}
-                                        onClick={(e) => e.stopPropagation()} 
-                                        title="Drag to move, Shift+Click or Right Click to delete"
-                                    >
-                                        <div className="relative z-10 text-white/90 text-[10px] font-bold pointer-events-none truncate px-2 drop-shadow-md">
-                                            {track.instrument?.type || "Clip"}
+                                {track.clips.map((clip, idx) => {
+                                    // Use preview position if this clip is being dragged
+                                    const isBeingDragged = clipPreview && clipPreview.trackId === track.id && clipPreview.clipIndex === idx;
+                                    const displayStartBar = isBeingDragged ? clipPreview.startBar : clip.startBar;
+                                    
+                                    return (
+                                        <div
+                                            key={`${clip.startBar}-${idx}`}
+                                            className={cn(
+                                                "absolute top-1 bottom-1 rounded border-t border-white/20 border-b shadow-md cursor-grab active:cursor-grabbing flex items-center justify-center overflow-hidden",
+                                                LOOP_COLORS[track.type] || "bg-zinc-700",
+                                                "after:absolute after:inset-0 after:bg-linear-to-b after:from-white/10 after:to-transparent hover:brightness-110",
+                                                isBeingDragged ? "" : "transition-all"
+                                            )}
+                                            style={{
+                                                left: displayStartBar * PIXELS_PER_BAR,
+                                                width: clip.durationBars * PIXELS_PER_BAR
+                                            }}
+                                            onMouseDown={(e) => handleMouseDown(e, track.id, idx, clip.startBar)}
+                                            onContextMenu={(e) => deleteClip(e, track.id, idx)}
+                                            onClick={(e) => e.stopPropagation()} 
+                                            title="Drag to move, Shift+Click or Right Click to delete"
+                                        >
+                                            <div className="relative z-10 text-white/90 text-[10px] font-bold pointer-events-none truncate px-2 drop-shadow-md">
+                                                {track.instrument?.type || "Clip"}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                          </div>
                      </div>
                  ))}
@@ -224,14 +298,19 @@ export function Timeline() {
                  {/* Playhead */}
                  <div 
                     className={cn(
-                        "absolute top-8 bottom-0 w-0.5 bg-cyan-500 z-20 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] cursor-grab active:cursor-grabbing",
+                        "absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group",
                         draggingPlayhead ? "" : "transition-all duration-75"
                     )}
                     style={{ left: 256 + ((playheadPreview !== null ? playheadPreview : currentBar) * PIXELS_PER_BAR) }}
                     onMouseDown={handlePlayheadMouseDown}
                     title="Drag to scrub timeline"
                  >
-                    <div className="absolute -top-1 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-cyan-500 pointer-events-none"></div>
+                    {/* Wider invisible hit area for easier dragging */}
+                    <div className="absolute -left-3 top-0 bottom-0 w-6"></div>
+                    {/* Triangle pointer at top */}
+                    <div className="absolute top-0 -left-1.5 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-cyan-500"></div>
+                    {/* Visible playhead line - extends full height */}
+                    <div className="absolute -left-0.5 top-8 bottom-0 w-0.5 bg-cyan-500 shadow-[0_0_10px_2px_rgba(6,182,212,0.5)] group-hover:w-1 transition-all"></div>
                  </div>
             </div>
         </div>

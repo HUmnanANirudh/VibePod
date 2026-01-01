@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
+            model: "gemini-2.5-flash-lite",
             generationConfig: {
                 responseMimeType: "application/json",
                 temperature: 0,
@@ -210,16 +210,28 @@ Start sparse, build to full richness!
 
 
         const rawText = result.response.text();
-        if (!rawText) {
+        console.log("Raw Gemini response:", rawText);
+        
+        if (!rawText || rawText.trim() === "") {
             throw new Error("Empty response from Gemini");
         }
 
         const responseText = rawText.replace(/```json|```/g, '').trim();
+        console.log("Cleaned response:", responseText.substring(0, 200) + "...");
+        
+        if (!responseText) {
+            throw new Error("Response became empty after cleanup");
+        }
+
         const project = JSON.parse(responseText);
 
         return NextResponse.json(project);
     } catch (error: any) {
         console.error("Gemini Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("Error details:", error.stack);
+        return NextResponse.json({ 
+            error: error.message,
+            details: "Check server logs for full response"
+        }, { status: 500 });
     }
 }
