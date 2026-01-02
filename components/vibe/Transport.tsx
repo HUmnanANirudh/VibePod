@@ -74,6 +74,10 @@ export function Transport({ initAudio }: TransportProps) {
     }, []);
 
     const togglePlay = async () => {
+        if (!project || project.tracks.length === 0) {
+            return;
+        }
+        
         try {
             await start();
             await initAudio();
@@ -153,15 +157,6 @@ export function Transport({ initAudio }: TransportProps) {
                 <div className="flex items-center gap-2 bg-black/40 p-2 rounded-full border border-zinc-700/50 shadow-inner">
                     <Button 
                         size="icon" 
-                        variant="ghost" 
-                        className="h-8 w-8 rounded-full text-zinc-600 hover:text-white hover:bg-white/10"
-                        onClick={skipBackward}
-                    >
-                        <SkipBack className="h-4 w-4 fill-current" />
-                    </Button>
-
-                    <Button 
-                        size="icon" 
                         variant="default"
                         className={cn(
                             "h-14 w-14 mx-2 rounded-full border-4 border-zinc-800 shadow-[2px_2px_5px_rgba(0,0,0,0.5),-1px_-1px_2px_rgba(255,255,255,0.1)] transition-all active:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.8)] active:translate-y-0.5 overflow-hidden group",
@@ -172,14 +167,6 @@ export function Transport({ initAudio }: TransportProps) {
                         onClick={togglePlay}
                     >
                         {isPlaying ? <Pause className="fill-current h-6 w-6" /> : <Play className="fill-current h-6 w-6 ml-1" />}
-                    </Button>
-                    <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="h-8 w-8 rounded-full text-zinc-600 hover:text-white hover:bg-white/10"
-                        onClick={skipForward}
-                    >
-                        <SkipForward className="h-4 w-4 fill-current" />
                     </Button>
                 </div>
 
