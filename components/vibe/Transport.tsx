@@ -1,14 +1,23 @@
 "use client";
 
-import React from 'react';
-import { Play, Square, Pause, SkipBack, SkipForward } from 'lucide-react';
-import { getContext, start } from 'tone';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { useAudioStore } from '@/store/useAudioStore';
-import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { GoogleLoginModal } from '@/components/vibe/GoogleLoginModal';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+import { useAudioStore } from '@/store/useAudioStore';
+import { authClient } from '@/lib/auth-client';
+import { Pause, Play, SkipBack, SkipForward, LogOut } from 'lucide-react';
+import { useState,useEffect } from 'react';
+import { getContext, start } from 'tone';
 
 interface TransportProps {
     initAudio: () => Promise<void>;
@@ -16,6 +25,7 @@ interface TransportProps {
 
 export function Transport({ initAudio }: TransportProps) {
     const { isPlaying, setIsPlaying, project, setProject, currentBar, draggedPlayheadBar, resetProject, seekTo } = useAudioStore();
+    const { data: session, isPending } = authClient.useSession();
     
     const formatTime = (totalBars: number) => {
         const bars = Math.floor(totalBars).toString().padStart(2, '0');
@@ -24,36 +34,39 @@ export function Transport({ initAudio }: TransportProps) {
         return `${bars}:${beats}:${sixteenths}`;
     };
 
-    const [audioState, setAudioState] = React.useState<string>('suspended');
-    
-    // Auth State
-    const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-    const [showLoginModal, setShowLoginModal] = React.useState(false);
+    const [audioState, setAudioState] = useState<string>('suspended');
+    const [showLoginModal, setShowLoginModal] = useState(false);
 
-    React.useEffect(() => {
-        // Check for existing session
-        const user = localStorage.getItem('vibepod_user');
-        if (user) {
-            setIsLoggedIn(true);
-        } else {
+    const isLoggedIn = !!session?.user;
+    const user = session?.user;
+
+    useEffect(() => {
+        if (!isPending && !session?.user) {
             setShowLoginModal(true);
         }
-    }, []);
+    }, [isPending, session]);
 
-    const handleLogin = () => {
-        localStorage.setItem('vibepod_user', 'demo_user');
-        setIsLoggedIn(true);
-        setShowLoginModal(false);
+    const handleLogin = async () => {
+        await authClient.signIn.social({
+            provider: "google",
+            callbackURL: "/",
+        });
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('vibepod_user');
-        setIsLoggedIn(false);
-        setShowLoginModal(true); // Show modal again or just show "Sign In" button?
-        // User request: "if user is not logged in then show a modal", so show it.
+    const handleLogout = async () => {
+        await authClient.signOut();
+        setShowLoginModal(true);
     };
+    const initials = user?.name
+        ? user.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2)
+        : user?.email?.[0]?.toUpperCase() || "U";
 
-    React.useEffect(() => {
+    useEffect(() => {
         const interval = setInterval(() => {
              setAudioState(getContext().state);
         }, 500);
@@ -169,16 +182,37 @@ export function Transport({ initAudio }: TransportProps) {
             <GoogleLoginModal open={!isLoggedIn && showLoginModal} onLogin={handleLogin} />
 
             <div className="flex items-center gap-4">
-               {isLoggedIn ? (
+               {isLoggedIn && user ? (
                    <div className="flex items-center gap-4">
-                        <div className="flex flex-col items-end hidden sm:flex">
-                            <span className="text-xs font-bold text-zinc-300">Demo User</span>
-                            <span className="text-[10px] text-zinc-500">Pro Plan</span>
+                        <div className="hidden sm:flex flex-col items-end">
+                            <span className="text-xs font-bold text-zinc-300">{user.name}</span>
                         </div>
-                        <Avatar className="h-9 w-9 border-2 border-amber-500/50 shadow-lg shadow-amber-900/20 cursor-pointer hover:scale-105 transition-transform" onClick={handleLogout}>
-                            <AvatarImage src="https://ui.shadcn.com/avatars/01.png" alt="User" />
-                            <AvatarFallback className="bg-amber-600 text-white font-bold">VP</AvatarFallback>
-                        </Avatar>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="relative h-9 w-9 rounded-full ring-2 ring-cyan-500/50 hover:ring-cyan-400 transition-all overflow-hidden">
+                                    <Avatar className="h-9 w-9">
+                                        <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
+                                        <AvatarFallback className="bg-linear-to-br from-cyan-500 to-purple-600 text-white font-bold">{initials}</AvatarFallback>
+                                    </Avatar>
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border-zinc-800">
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-medium text-zinc-100">{user.name}</p>
+                                        <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-zinc-800" />
+                                <DropdownMenuItem
+                                    onClick={handleLogout}
+                                    className="text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer"
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Sign out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                    </div>
                ) : (
                     <Button 

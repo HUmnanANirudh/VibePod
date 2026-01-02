@@ -9,7 +9,6 @@ import { useAudioStore } from '@/store/useAudioStore';
 export default function Home() {
   const { initAudio } = useAudioEngine();
   const { project } = useAudioStore();
-  
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
