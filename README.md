@@ -2,7 +2,9 @@
 
 **AI-Powered Music Creation Platform**
 
-A browser-based generative AI music composition tool with an intuitive DAW-like editor, real-time audio synthesis using Tone.js, and Google authentication for seamless project management.
+VibePod is a browser-based generative AI music composition tool that brings core music production workflows directly to the web. It combines AI-assisted arrangement, a DAW-like multi-track editor, real-time audio synthesis using Tone.js, and cloud-based project management with Google authentication.
+
+> **Note:** VibePod is currently designed for desktop use. The interface is **not yet responsive** and may not function correctly on mobile or small-screen devices.
 
 ---
 
