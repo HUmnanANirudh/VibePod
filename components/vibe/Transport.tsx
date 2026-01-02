@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useAudioStore } from '@/store/useAudioStore';
 import { cn } from '@/lib/utils';
+import { GoogleLoginModal } from '@/components/vibe/GoogleLoginModal';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface TransportProps {
     initAudio: () => Promise<void>;
@@ -23,6 +25,33 @@ export function Transport({ initAudio }: TransportProps) {
     };
 
     const [audioState, setAudioState] = React.useState<string>('suspended');
+    
+    // Auth State
+    const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+    const [showLoginModal, setShowLoginModal] = React.useState(false);
+
+    React.useEffect(() => {
+        // Check for existing session
+        const user = localStorage.getItem('vibepod_user');
+        if (user) {
+            setIsLoggedIn(true);
+        } else {
+            setShowLoginModal(true);
+        }
+    }, []);
+
+    const handleLogin = () => {
+        localStorage.setItem('vibepod_user', 'demo_user');
+        setIsLoggedIn(true);
+        setShowLoginModal(false);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('vibepod_user');
+        setIsLoggedIn(false);
+        setShowLoginModal(true); // Show modal again or just show "Sign In" button?
+        // User request: "if user is not logged in then show a modal", so show it.
+    };
 
     React.useEffect(() => {
         const interval = setInterval(() => {
@@ -136,7 +165,32 @@ export function Transport({ initAudio }: TransportProps) {
                 </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            
+            <GoogleLoginModal open={!isLoggedIn && showLoginModal} onLogin={handleLogin} />
+
+            <div className="flex items-center gap-4">
+               {isLoggedIn ? (
+                   <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-end hidden sm:flex">
+                            <span className="text-xs font-bold text-zinc-300">Demo User</span>
+                            <span className="text-[10px] text-zinc-500">Pro Plan</span>
+                        </div>
+                        <Avatar className="h-9 w-9 border-2 border-amber-500/50 shadow-lg shadow-amber-900/20 cursor-pointer hover:scale-105 transition-transform" onClick={handleLogout}>
+                            <AvatarImage src="https://ui.shadcn.com/avatars/01.png" alt="User" />
+                            <AvatarFallback className="bg-amber-600 text-white font-bold">VP</AvatarFallback>
+                        </Avatar>
+                   </div>
+               ) : (
+                    <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setShowLoginModal(true)}
+                        className="text-zinc-400 hover:text-white"
+                    >
+                        Sign In
+                    </Button>
+               )}
+
                <Button 
                  variant="outline" 
                  size="sm" 
