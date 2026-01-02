@@ -15,7 +15,7 @@ import { GoogleLoginModal } from '@/components/vibe/GoogleLoginModal';
 import { authClient } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 import { useAudioStore } from '@/store/useAudioStore';
-import { Cloud, Loader2, LogOut, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
+import { Cloud, Loader2, LogOut, Pause, Play } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getContext, start } from 'tone';
 
@@ -24,7 +24,7 @@ interface TransportProps {
 }
 
 export function Transport({ initAudio }: TransportProps) {
-    const { isPlaying, setIsPlaying, project, setProject, currentBar, draggedPlayheadBar, resetProject, seekTo, isSaving, currentProjectId } = useAudioStore();
+    const { isPlaying, setIsPlaying, project, setProject, currentBar, draggedPlayheadBar, isSaving, currentProjectId } = useAudioStore();
     const { data: session, isPending } = authClient.useSession();
     
     const formatTime = (totalBars: number) => {
@@ -89,28 +89,11 @@ export function Transport({ initAudio }: TransportProps) {
         } catch (error) {
         }
     };
-
-    const stop = () => {
-        setIsPlaying(false);
-        seekTo(0);
-    };
-
-    const skipForward = () => {
-        seekTo(Math.min(96, currentBar + 8));
-    };
-
-    const skipBackward = () => {
-        seekTo(Math.max(0, currentBar - 8));
-    };
     
     const handleBpmChange = (val: number[]) => {
         if (project) {
             setProject({ ...project, bpm: val[0] });
         }
-    };
-
-    const handleSeek = (val: number[]) => {
-        seekTo(val[0]);
     };
 
     return (
