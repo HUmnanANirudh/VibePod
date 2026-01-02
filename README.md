@@ -137,7 +137,7 @@ Download your finished tracks:
 ## Tech Stack
 
 ### Frontend
-- **Next.js 15** - React framework with App Router
+- **Next.js 16** - React framework with App Router
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first styling
 - **Shadcn UI** - Component library
