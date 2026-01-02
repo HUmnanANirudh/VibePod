@@ -54,8 +54,6 @@ export function AIPrompt({ downloadAudio }: AIPromptProps) {
         setProject(newProject);
         setIsLocked(true);
         toast.success("Project generated!");
-        
-        // Auto-save to database
         try {
             const saveRes = await fetch("/api/projects", {
                 method: "POST",
@@ -74,13 +72,11 @@ export function AIPrompt({ downloadAudio }: AIPromptProps) {
                 toast.error("Failed to save project to library");
             }
         } catch (saveErr) {
-            console.error("Failed to save project", saveErr);
             toast.error("Failed to save project to library");
         }
 
       }, 100);
     } catch (err) {
-      console.error(err);
       toast.error("Failed to generate project");
     } finally {
       setLoading(false);

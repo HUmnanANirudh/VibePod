@@ -2,21 +2,21 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Slider } from '@/components/ui/slider';
 import { GoogleLoginModal } from '@/components/vibe/GoogleLoginModal';
+import { authClient } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 import { useAudioStore } from '@/store/useAudioStore';
-import { authClient } from '@/lib/auth-client';
-import { Pause, Play, SkipBack, SkipForward, LogOut, Cloud, CloudOff, Loader2 } from 'lucide-react';
-import { useState,useEffect } from 'react';
+import { Cloud, Loader2, LogOut, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { getContext, start } from 'tone';
 
 interface TransportProps {
@@ -83,7 +83,6 @@ export function Transport({ initAudio }: TransportProps) {
             
             setIsPlaying(!isPlaying);
         } catch (error) {
-            console.error('Failed to start audio:', error);
         }
     };
 
@@ -119,7 +118,6 @@ export function Transport({ initAudio }: TransportProps) {
                  <div className="text-[10px] uppercase font-bold text-zinc-500 border border-zinc-700 bg-zinc-900/50 px-2 py-0.5 rounded shadow-inner tracking-widest">
                     {audioState}
                 </div>
-                {/* Auto-save indicator */}
                 {currentProjectId && (
                     <div className={cn(
                         "flex items-center gap-1 text-[10px] uppercase font-bold px-2 py-0.5 rounded border shadow-inner tracking-widest transition-all",

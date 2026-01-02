@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import React from "react";
 
 interface PlayheadProps {
@@ -9,7 +8,7 @@ interface PlayheadProps {
   onMouseDown: (e: React.MouseEvent) => void;
 }
 
-export const Playhead = React.memo(function Playhead({ currentBar, draggedPlayheadBar, pixelsPerBar, draggingPlayhead, onMouseDown }: PlayheadProps) {
+export const Playhead = React.memo(function Playhead({ currentBar, draggedPlayheadBar, pixelsPerBar,onMouseDown }: PlayheadProps) {
   const position = (draggedPlayheadBar !== null ? draggedPlayheadBar : currentBar) * pixelsPerBar;
   
   return (
@@ -17,7 +16,7 @@ export const Playhead = React.memo(function Playhead({ currentBar, draggedPlayhe
       className="absolute top-0 bottom-0 z-20 cursor-grab active:cursor-grabbing group"
       style={{
         left: position,
-        transform: 'translate3d(0, 0, 0)', // Force GPU acceleration
+        transform: 'translate3d(0, 0, 0)',
         willChange: 'left',
       }}
       onMouseDown={onMouseDown}

@@ -10,23 +10,19 @@ interface SavedProject {
   updatedAt: string;
 }
 
-// Debounce timer for auto-save
 let autoSaveTimer: NodeJS.Timeout | null = null;
 
 interface AudioState {
   project: Project | null;
-  currentProjectId: string | null; // Track which saved project we're editing
+  currentProjectId: string | null;
   isPlaying: boolean;
   seekRequest: { bar: number, timestamp: number } | null;
-  currentBar: number; // For visualization
-  draggedPlayheadBar: number | null; // For playhead dragging
-  isSaving: boolean; // Auto-save indicator
-  
-  // Saved projects from database
+  currentBar: number; 
+  draggedPlayheadBar: number | null; 
+  isSaving: boolean;
   savedProjects: SavedProject[];
   loadingSavedProjects: boolean;
 
-  // Actions
   setProject: (project: Project, projectId?: string | null) => void;
   setIsPlaying: (isPlaying: boolean) => void;
   setCurrentBar: (bar: number) => void;
@@ -35,8 +31,7 @@ interface AudioState {
   updateTrack: (trackId: string, updates: Partial<Track>) => void;
   updateClip: (trackId: string, clipIndex: number, updates: Partial<Clip>) => void;
   resetProject: () => void;
-  
-  // Saved projects actions
+
   setSavedProjects: (projects: SavedProject[]) => void;
   addSavedProject: (project: SavedProject) => void;
   updateSavedProject: (project: SavedProject) => void;
@@ -45,7 +40,6 @@ interface AudioState {
   setCurrentProjectId: (id: string | null) => void;
 }
 
-// Auto-save function (debounced)
 const triggerAutoSave = (projectId: string, project: Project, set: any, get: any) => {
   if (autoSaveTimer) {
     clearTimeout(autoSaveTimer);
@@ -62,20 +56,17 @@ const triggerAutoSave = (projectId: string, project: Project, set: any, get: any
       
       if (res.ok) {
         const updated = await res.json();
-        // Update the saved project in the list
         const savedProjects = get().savedProjects;
         const updatedProjects = savedProjects.map((p: SavedProject) => 
           p.id === projectId ? { ...p, data: project, updatedAt: updated.updatedAt } : p
         );
         set({ savedProjects: updatedProjects });
-        console.log('Auto-saved project');
       }
     } catch (err) {
-      console.error('Auto-save failed:', err);
     } finally {
       set({ isSaving: false });
     }
-  }, 1500); // 1.5 second debounce
+  }, 1500);
 };
 
 export const useAudioStore = create<AudioState>((set, get) => ({
@@ -109,8 +100,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     );
     const newProject = { ...state.project, tracks: newTracks };
     set({ project: newProject });
-    
-    // Trigger auto-save if we have a project ID
+
     if (state.currentProjectId) {
       triggerAutoSave(state.currentProjectId, newProject, set, get);
     }
@@ -131,8 +121,6 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     });
     const newProject = { ...state.project, tracks: newTracks };
     set({ project: newProject });
-    
-    // Trigger auto-save if we have a project ID
     if (state.currentProjectId) {
       triggerAutoSave(state.currentProjectId, newProject, set, get);
     }
@@ -148,7 +136,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
   setSavedProjects: (projects) => set({ savedProjects: projects }),
   addSavedProject: (project) => set((state) => ({ 
     savedProjects: [project, ...state.savedProjects],
-    currentProjectId: project.id // Set as current project when added
+    currentProjectId: project.id
   })),
   updateSavedProject: (project) => set((state) => ({
     savedProjects: state.savedProjects.map(p => p.id === project.id ? project : p)
@@ -165,7 +153,6 @@ export const useAudioStore = create<AudioState>((set, get) => ({
         set({ savedProjects: data });
       }
     } catch (err) {
-      console.error("Failed to fetch projects", err);
     } finally {
       set({ loadingSavedProjects: false });
     }

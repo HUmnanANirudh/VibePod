@@ -78,7 +78,6 @@ export function Timeline() {
 
   useEffect(() => {
     if (draggedPlayheadBar !== null && !draggingPlayhead && Math.abs(currentBar - draggedPlayheadBar) < 0.01) {
-      // Reset dragged playhead only after successful seek
       setDraggedPlayheadBar(null);
     }
   }, [currentBar, draggedPlayheadBar, draggingPlayhead, setDraggedPlayheadBar]);
@@ -101,11 +100,9 @@ export function Timeline() {
       }
 
       if (draggingPlayhead && draggedPlayheadBar !== null) {
-        // Only seek if position actually changed
         if (Math.abs(draggedPlayheadBar - draggingPlayhead.originalBar) > 0.1) {
           seekTo(Math.floor(draggedPlayheadBar));
         } else {
-          // Reset if no movement
           setDraggedPlayheadBar(null);
         }
       }
@@ -144,7 +141,7 @@ export function Timeline() {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (draggingPlayhead) {
       const deltaX = e.clientX - draggingPlayhead.startX;
-      const deltaBars = deltaX / PIXELS_PER_BAR; // Don't round for smooth dragging
+      const deltaBars = deltaX / PIXELS_PER_BAR;
 
       let newBar = draggingPlayhead.originalBar + deltaBars;
       if (newBar < 0) newBar = 0;
@@ -220,7 +217,6 @@ export function Timeline() {
         }
       }
     } catch (error) {
-      console.error("Failed to parse sound data:", error);
     }
   };
 

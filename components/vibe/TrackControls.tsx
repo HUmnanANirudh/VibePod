@@ -1,13 +1,10 @@
 import { Slider } from '@/components/ui/slider';
 import { Toggle } from '@/components/ui/toggle';
-import { Button } from '@/components/ui/button';
 import { LOOP_COLORS } from '@/lib/audioUtils';
 import { Track } from '@/lib/schema';
 import { cn } from '@/lib/utils';
 import { useAudioStore } from '@/store/useAudioStore';
 import { ScrollArea } from '../ui/scroll-area';
-import { SkipBack, SkipForward } from 'lucide-react';
-import * as Tone from 'tone';
 
 interface TrackControlsProps {
     track: Track;
@@ -17,12 +14,10 @@ export function TrackControls({ track }: TrackControlsProps) {
     const { updateTrack, seekTo, currentBar } = useAudioStore();
 
     const handleMuteToggle = (muted: boolean) => {
-        console.log(`Track ${track.id} muted:`, muted);
         updateTrack(track.id, { muted });
     };
 
     const handleVolumeChange = (value: number[]) => {
-        console.log(`Track ${track.id} volume:`, value[0]);
         updateTrack(track.id, { volume: value[0] });
     };
     return (

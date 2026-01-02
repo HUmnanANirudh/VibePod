@@ -54,16 +54,14 @@ export function SoundBrowser() {
 
   const loadProject = (projectData: any) => {
       try {
-          // Confirm?
           resetProject();
           setTimeout(() => {
              const parsed = ProjectSchema.parse(projectData.data);
-             setProject(parsed, projectData.id); // Pass project ID for auto-save
+             setProject(parsed, projectData.id);
              setCurrentProjectId(projectData.id);
              toast.success(`Loaded project: ${projectData.name}`);
           }, 50);
       } catch (e) {
-          console.error("Failed to load project", e);
           toast.error("Failed to load project structure");
       }
   };
@@ -88,7 +86,6 @@ export function SoundBrowser() {
 
       const SynthClass = (Tone as any)[sound.instrumentType];
       if (!SynthClass) {
-        console.error("Unknown synth type:", sound.instrumentType);
         return;
       }
 
@@ -113,7 +110,6 @@ export function SoundBrowser() {
         }
       }, Tone.Time(duration).toMilliseconds() + 100);
     } catch (error) {
-      console.error("Error playing sound:", error);
       setPlayingSound(null);
     }
   };

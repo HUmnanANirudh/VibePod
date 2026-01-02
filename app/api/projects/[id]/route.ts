@@ -21,16 +21,12 @@ export async function PUT(
         const { id } = await params;
         const body = await req.json();
         const { name, data, prompt } = body;
-
-        // Build update object with only provided fields
         const updateData: any = {
             updatedAt: new Date(),
         };
         if (name !== undefined) updateData.name = name;
         if (data !== undefined) updateData.data = data;
         if (prompt !== undefined) updateData.prompt = prompt;
-
-        // Update only if user owns this project
         const updated = await db
             .update(project)
             .set(updateData)
@@ -46,10 +42,8 @@ export async function PUT(
             return NextResponse.json({ error: 'Project not found' }, { status: 404 });
         }
 
-        console.log("Auto-saved project:", id);
         return NextResponse.json(updated[0]);
     } catch (error) {
-        console.error("PUT /api/projects/[id] error:", error);
         return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
     }
 }
@@ -69,7 +63,6 @@ export async function DELETE(
 
         const { id } = await params;
 
-        // Delete only if user owns this project
         const deleted = await db
             .delete(project)
             .where(
@@ -86,7 +79,6 @@ export async function DELETE(
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("DELETE /api/projects/[id] error:", error);
         return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 });
     }
 }

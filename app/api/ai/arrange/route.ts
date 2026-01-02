@@ -269,14 +269,12 @@ REMEMBER: This track should sound COMPLETELY DIFFERENT from other generations!
 
 
         const rawText = result.response.text();
-        console.log("Raw Gemini response:", rawText);
         
         if (!rawText || rawText.trim() === "") {
             throw new Error("Empty response from Gemini");
         }
 
         const responseText = rawText.replace(/```json|```/g, '').trim();
-        console.log("Cleaned response:", responseText.substring(0, 200) + "...");
         
         if (!responseText) {
             throw new Error("Response became empty after cleanup");
@@ -286,8 +284,6 @@ REMEMBER: This track should sound COMPLETELY DIFFERENT from other generations!
 
         return NextResponse.json(project);
     } catch (error: any) {
-        console.error("Gemini Error:", error);
-        console.error("Error details:", error.stack);
         return NextResponse.json({ 
             error: error.message,
             details: "Check server logs for full response"

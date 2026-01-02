@@ -87,7 +87,6 @@ export function ClipEditor({ open, onClose, trackId, clipIndex }: ClipEditorProp
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-125 bg-zinc-900 rounded-sm border-x-4 border-zinc-800 shadow-2xl p-0 overflow-hidden border-y-0 gap-0">
-        {/* Decorative Screws */}
         <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-zinc-700 shadow-[inset_1px_1px_2px_rgba(0,0,0,0.8)] z-50 flex items-center justify-center pointer-events-none">
           <div className="w-1.5 h-0.5 bg-zinc-900 rotate-45"></div>
         </div>
