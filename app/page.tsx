@@ -25,7 +25,7 @@ export default function Home() {
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground opacity-50">
                         <div className="text-4xl font-thin tracking-tighter mb-4">VibePod</div>
-                        <p>Enter a prompt above to generate a track or drag loops from the library.</p>
+                        <p>Enter a prompt above to generate a track.</p>
                     </div>
                 )}
             </div>
