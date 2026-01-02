@@ -249,3 +249,4 @@ vibepod/
 - Waveform visualization
 - More AI remix commands
 - Collaboration features
+- Mobile responsiveness & touch optimization
