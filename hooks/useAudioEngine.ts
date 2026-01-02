@@ -11,6 +11,7 @@ export function useAudioEngine() {
     const effectsRef = useRef<Map<string, Tone.ToneAudioNode[]>>(new Map()); // Manage effect chains
     const partsRef = useRef<Map<string, Tone.Part<any>>>(new Map());
     const synthTypesRef = useRef<Map<string, string>>(new Map());
+    const recorderRef = useRef<Tone.Recorder | null>(null);
     const structureHashRef = useRef<string>("");
     const masterChainRef = useRef<{ limiter: Tone.Limiter, compressor: Tone.Compressor, gain: Tone.Gain } | null>(null);
     const sidechainRef = useRef<Tone.Compressor | null>(null);
@@ -29,6 +30,10 @@ export function useAudioEngine() {
                 release: 0.25
             }).connect(limiter);
             masterChainRef.current = { limiter, compressor, gain };
+
+            // Initialize Recorder
+            recorderRef.current = new Tone.Recorder();
+            gain.connect(recorderRef.current);
         }
 
         Tone.getTransport().loop = true;
@@ -41,6 +46,71 @@ export function useAudioEngine() {
         console.log('Audio Engine Ready v12 (Presets + Sidechain + Swing)');
 
     };
+
+    // ... (rest of effects)
+
+    const startRecording = async () => {
+        if (recorderRef.current && recorderRef.current.state !== 'started') {
+            await recorderRef.current.start();
+            console.log("Recording started");
+        }
+    };
+
+    const stopRecording = async () => {
+        if (recorderRef.current && recorderRef.current.state === 'started') {
+            const recording = await recorderRef.current.stop();
+            const url = URL.createObjectURL(recording);
+            const anchor = document.createElement("a");
+            anchor.download = "vibepod-track.webm";
+            anchor.href = url;
+            anchor.click();
+            console.log("Recording stopped and downloaded");
+            return url;
+        }
+        return null;
+    };
+
+    const renderAudio = async () => {
+        if (!recorderRef.current) return;
+
+        if (Tone.getTransport().state === 'started') {
+            Tone.getTransport().stop();
+        }
+
+        await recorderRef.current.start();
+        Tone.getTransport().position = 0;
+        await Tone.getTransport().start();
+
+        // Calculate duration
+        const loopEndStr = Tone.getTransport().loopEnd;
+        // loopEnd might be string or number. Default "128:0:0"
+        const loopEndSeconds = Tone.Time(loopEndStr).toSeconds();
+
+        console.log(`Rendering for ${loopEndSeconds} seconds...`);
+
+        return new Promise<void>((resolve) => {
+            setTimeout(async () => {
+                Tone.getTransport().stop();
+                if (recorderRef.current && recorderRef.current.state === 'started') {
+                    const recording = await recorderRef.current.stop();
+                    const url = URL.createObjectURL(recording);
+                    const anchor = document.createElement("a");
+                    anchor.download = "vibepod-track.webm";
+                    anchor.href = url;
+                    anchor.click();
+                }
+                resolve();
+            }, loopEndSeconds * 1000 + 500); // 500ms safety buffer
+        });
+    };
+
+    // Sync Project to Audio Engine
+    // ... (previous implementation)
+
+    // ... (rest of existing code)
+
+    // Continued...
+
 
     // Sync Project to Audio Engine
     useEffect(() => {
@@ -293,7 +363,7 @@ export function useAudioEngine() {
         let animationFrameId: number;
         let lastUpdate = 0;
         const throttleMs = 16; // ~60fps
-        
+
         const updatePlayhead = (timestamp: number) => {
             // Throttle updates to reduce re-renders
             if (timestamp - lastUpdate >= throttleMs) {
@@ -308,9 +378,9 @@ export function useAudioEngine() {
             }
             animationFrameId = requestAnimationFrame(updatePlayhead);
         };
-        
+
         animationFrameId = requestAnimationFrame(updatePlayhead);
-        
+
         return () => {
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
@@ -318,6 +388,6 @@ export function useAudioEngine() {
         };
     }, [setCurrentBar]);
 
-    return { initAudio };
+    return { initAudio, startRecording, stopRecording, renderAudio };
 }
 

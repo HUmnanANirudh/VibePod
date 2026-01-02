@@ -7,7 +7,7 @@ import { SoundBrowser } from '@/components/vibe/SoundBrowser';
 import { useAudioStore } from '@/store/useAudioStore';
 
 export default function Home() {
-  const { initAudio } = useAudioEngine();
+  const { initAudio, renderAudio } = useAudioEngine();
   const { project } = useAudioStore();
 
   return (
@@ -17,7 +17,7 @@ export default function Home() {
         <SoundBrowser />
         <div className="flex-1 flex flex-col min-w-0 bg-[#121214]">
             <div className="p-4 border-b border-zinc-800 bg-[#18181b] shadow-lg z-10">
-                 <AIPrompt />
+                 <AIPrompt downloadAudio={renderAudio} />
             </div>
             <div className="flex-1 overflow-hidden flex flex-col relative">
                 {project && project.tracks.length > 0 ? (

@@ -8,10 +8,24 @@ import { useAudioStore } from "@/store/useAudioStore";
 import { ProjectSchema } from "@/lib/schema";
 import { toast } from "sonner";
 
-export function AIPrompt() {
+interface AIPromptProps {
+    downloadAudio?: () => Promise<void>;
+}
+
+export function AIPrompt({ downloadAudio }: AIPromptProps) {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
-  const { setProject, resetProject } = useAudioStore();
+  const [isLocked, setIsLocked] = useState(false);
+  const { project, setProject, resetProject } = useAudioStore();
+
+  // Effect to lock if project exists (e.g. loaded from history)
+  React.useEffect(() => {
+    if (project && project.tracks.length > 0) {
+      setIsLocked(true);
+    } else {
+        setIsLocked(false);
+    }
+  }, [project]);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,11 +45,31 @@ export function AIPrompt() {
       }
 
       const data = await res.json();
-      const project = ProjectSchema.parse(data);
+      const newProject = ProjectSchema.parse(data);
+      
       resetProject();
-      setTimeout(() => {
-        setProject(project);
+      setTimeout(async () => {
+        setProject(newProject);
+        setIsLocked(true);
         toast.success("Project generated!");
+        
+        // Auto-save to database
+        try {
+            await fetch("/api/projects", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    name: prompt, 
+                    prompt: prompt,
+                    data: newProject 
+                }),
+            });
+            toast.success("Project saved to library");
+        } catch (saveErr) {
+            console.error("Failed to save project", saveErr);
+            toast.error("Failed to save project to library");
+        }
+
       }, 100);
     } catch (err) {
       console.error(err);
@@ -43,6 +77,12 @@ export function AIPrompt() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNewProject = () => {
+      resetProject();
+      setPrompt("");
+      setIsLocked(false);
   };
 
   return (
@@ -65,7 +105,7 @@ export function AIPrompt() {
           AI Orchestrator Module // V1.0
         </span>
         <div className="flex gap-1">
-          <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse shadow-[0_0_4px_rgba(34,197,94,0.8)]"></div>
+          <div className={`w-1 h-1 rounded-full animate-pulse shadow-[0_0_4px_rgba(34,197,94,0.8)] ${isLocked ? 'bg-red-500' : 'bg-green-500'}`}></div>
           <div className="w-1 h-1 bg-zinc-600 rounded-full"></div>
           <div className="w-1 h-1 bg-zinc-600 rounded-full"></div>
         </div>
@@ -78,26 +118,56 @@ export function AIPrompt() {
         <div className="absolute inset-0 pointer-events-none bg-linear-to-br from-white/5 to-transparent z-10"></div>
 
         <div className="flex-1 relative">
-          <Wand2 className="absolute left-3 top-3.5 h-5 w-5 text-cyan-500/50" />
+          <Wand2 className={`absolute left-3 top-3.5 h-5 w-5 ${isLocked ? 'text-zinc-600' : 'text-cyan-500/50'}`} />
           <Input
-            placeholder="CMD: Generate track..."
+            placeholder={isLocked ? "System Locked. Project Active." : "CMD: Generate track..."}
             value={prompt}
+            disabled={isLocked}
             onChange={(e) => setPrompt(e.target.value)}
-            className="pl-10 bg-zinc-950 border-zinc-800 text-cyan-400 placeholder:text-cyan-900 font-mono text-sm h-12 rounded-sm focus-visible:ring-1 focus-visible:ring-cyan-500 shadow-[inset_0_2px_8px_rgba(0,0,0,1)] uppercase"
+            className={`pl-10 bg-zinc-950 border-zinc-800 font-mono text-sm h-12 rounded-sm focus-visible:ring-1 shadow-[inset_0_2px_8px_rgba(0,0,0,1)] uppercase disabled:opacity-50 disabled:cursor-not-allowed ${isLocked ? 'text-zinc-500 border-zinc-900' : 'text-cyan-400 placeholder:text-cyan-900 focus-visible:ring-cyan-500'}`}
           />
         </div>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="h-12 w-32 rounded-sm bg-zinc-800 border-2 border-zinc-700 text-zinc-400 hover:text-cyan-400 hover:border-cyan-500 hover:bg-zinc-900 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter"
-        >
-          {loading ? (
-            <Loader2 className="animate-spin text-cyan-500" />
-          ) : (
-            "EXECUTE"
-          )}
-        </Button>
+        {isLocked ? (
+             <>
+                <Button
+                    type="button"
+                    onClick={() => {
+                        if (downloadAudio) {
+                            toast.promise(downloadAudio(), {
+                                loading: 'Rendering audio (playing in real-time)...',
+                                success: 'Audio downloaded!',
+                                error: 'Failed to download audio',
+                            });
+                        } else {
+                            toast.error("Audio download not available");
+                        }
+                    }}
+                    className="h-12 w-32 rounded-sm bg-zinc-900 border-2 border-zinc-800 text-zinc-400 hover:text-green-400 hover:border-green-500 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter"
+                >
+                    DOWNLOAD
+                </Button>
+                <Button
+                    type="button"
+                    onClick={handleNewProject}
+                    className="h-12 w-32 rounded-sm bg-red-950/30 border-2 border-red-900/50 text-red-500 hover:bg-red-900/50 hover:border-red-500 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter"
+                >
+                    NEW PROJECT
+                </Button>
+             </>
+        ) : (
+            <Button
+            type="submit"
+            disabled={loading}
+            className="h-12 w-32 rounded-sm bg-zinc-800 border-2 border-zinc-700 text-zinc-400 hover:text-cyan-400 hover:border-cyan-500 hover:bg-zinc-900 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter"
+            >
+            {loading ? (
+                <Loader2 className="animate-spin text-cyan-500" />
+            ) : (
+                "EXECUTE"
+            )}
+            </Button>
+        )}
       </form>
     </div>
   );
