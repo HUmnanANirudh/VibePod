@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Wand2, Loader2 } from "lucide-react";
+import { Wand2, Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAudioStore } from "@/store/useAudioStore";
@@ -9,14 +9,16 @@ import { ProjectSchema } from "@/lib/schema";
 import { toast } from "sonner";
 
 interface AIPromptProps {
-    downloadAudio?: () => Promise<void>;
+    downloadAudio?: (onProgress?: (percent: number) => void) => Promise<void>;
 }
 
 export function AIPrompt({ downloadAudio }: AIPromptProps) {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
-  const { project, setProject, resetProject } = useAudioStore();
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const { project, setProject, resetProject, addSavedProject } = useAudioStore();
 
   // Effect to lock if project exists (e.g. loaded from history)
   React.useEffect(() => {
@@ -55,7 +57,7 @@ export function AIPrompt({ downloadAudio }: AIPromptProps) {
         
         // Auto-save to database
         try {
-            await fetch("/api/projects", {
+            const saveRes = await fetch("/api/projects", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
@@ -64,7 +66,13 @@ export function AIPrompt({ downloadAudio }: AIPromptProps) {
                     data: newProject 
                 }),
             });
-            toast.success("Project saved to library");
+            if (saveRes.ok) {
+                const savedProject = await saveRes.json();
+                addSavedProject(savedProject);
+                toast.success("Project saved to library");
+            } else {
+                toast.error("Failed to save project to library");
+            }
         } catch (saveErr) {
             console.error("Failed to save project", saveErr);
             toast.error("Failed to save project to library");
@@ -132,25 +140,45 @@ export function AIPrompt({ downloadAudio }: AIPromptProps) {
              <>
                 <Button
                     type="button"
-                    onClick={() => {
+                    disabled={downloading}
+                    onClick={async () => {
                         if (downloadAudio) {
-                            toast.promise(downloadAudio(), {
-                                loading: 'Rendering audio (playing in real-time)...',
-                                success: 'Audio downloaded!',
-                                error: 'Failed to download audio',
-                            });
+                            setDownloading(true);
+                            setDownloadProgress(0);
+                            try {
+                                await downloadAudio((percent) => {
+                                    setDownloadProgress(Math.round(percent));
+                                });
+                                toast.success('Audio downloaded!');
+                            } catch (err) {
+                                toast.error('Failed to download audio');
+                            } finally {
+                                setDownloading(false);
+                                setDownloadProgress(0);
+                            }
                         } else {
                             toast.error("Audio download not available");
                         }
                     }}
-                    className="h-12 w-32 rounded-sm bg-zinc-900 border-2 border-zinc-800 text-zinc-400 hover:text-green-400 hover:border-green-500 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter"
+                    className="h-12 w-32 rounded-sm bg-zinc-900 border-2 border-zinc-800 text-zinc-400 hover:text-green-400 hover:border-green-500 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter disabled:opacity-50"
                 >
-                    DOWNLOAD
+                    {downloading ? (
+                        <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            {downloadProgress}%
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-2">
+                            <Download className="h-4 w-4" />
+                            EXPORT
+                        </span>
+                    )}
                 </Button>
                 <Button
                     type="button"
                     onClick={handleNewProject}
-                    className="h-12 w-32 rounded-sm bg-red-950/30 border-2 border-red-900/50 text-red-500 hover:bg-red-900/50 hover:border-red-500 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter"
+                    disabled={downloading}
+                    className="h-12 w-32 rounded-sm bg-red-950/30 border-2 border-red-900/50 text-red-500 hover:bg-red-900/50 hover:border-red-500 shadow-[2px_2px_0_rgba(0,0,0,0.5)] active:translate-y-0.5 active:shadow-none transition-all font-mono font-bold tracking-tighter disabled:opacity-50"
                 >
                     NEW PROJECT
                 </Button>

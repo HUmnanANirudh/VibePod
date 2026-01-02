@@ -15,7 +15,7 @@ import { GoogleLoginModal } from '@/components/vibe/GoogleLoginModal';
 import { cn } from '@/lib/utils';
 import { useAudioStore } from '@/store/useAudioStore';
 import { authClient } from '@/lib/auth-client';
-import { Pause, Play, SkipBack, SkipForward, LogOut } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, LogOut, Cloud, CloudOff, Loader2 } from 'lucide-react';
 import { useState,useEffect } from 'react';
 import { getContext, start } from 'tone';
 
@@ -24,7 +24,7 @@ interface TransportProps {
 }
 
 export function Transport({ initAudio }: TransportProps) {
-    const { isPlaying, setIsPlaying, project, setProject, currentBar, draggedPlayheadBar, resetProject, seekTo } = useAudioStore();
+    const { isPlaying, setIsPlaying, project, setProject, currentBar, draggedPlayheadBar, resetProject, seekTo, isSaving, currentProjectId } = useAudioStore();
     const { data: session, isPending } = authClient.useSession();
     
     const formatTime = (totalBars: number) => {
@@ -119,6 +119,27 @@ export function Transport({ initAudio }: TransportProps) {
                  <div className="text-[10px] uppercase font-bold text-zinc-500 border border-zinc-700 bg-zinc-900/50 px-2 py-0.5 rounded shadow-inner tracking-widest">
                     {audioState}
                 </div>
+                {/* Auto-save indicator */}
+                {currentProjectId && (
+                    <div className={cn(
+                        "flex items-center gap-1 text-[10px] uppercase font-bold px-2 py-0.5 rounded border shadow-inner tracking-widest transition-all",
+                        isSaving 
+                            ? "text-amber-400 border-amber-700/50 bg-amber-900/20" 
+                            : "text-emerald-400 border-emerald-700/50 bg-emerald-900/20"
+                    )}>
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Saving
+                            </>
+                        ) : (
+                            <>
+                                <Cloud className="h-3 w-3" />
+                                Saved
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className="flex items-center gap-8">
@@ -167,7 +188,7 @@ export function Transport({ initAudio }: TransportProps) {
                 <div className="flex items-center gap-4 w-56 bg-zinc-800/30 p-2 rounded-lg border border-zinc-700/50">
                     <span className="text-[10px] text-zinc-500 font-bold tracking-widest">BPM</span>
                     <Slider 
-                        value={[project?.bpm || 120]} 
+                        value={[project?.bpm || 0]} 
                         min={60} 
                         max={160} 
                         step={1} 
@@ -224,15 +245,6 @@ export function Transport({ initAudio }: TransportProps) {
                         Sign In
                     </Button>
                )}
-
-               <Button 
-                 variant="outline" 
-                 size="sm" 
-                 onClick={resetProject}
-                 className="bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:border-zinc-500 hover:bg-zinc-800 transition-colors uppercase text-xs font-bold tracking-wider"
-               >
-                   New Project
-               </Button>
             </div>
         </div>
     );

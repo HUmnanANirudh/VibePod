@@ -32,9 +32,7 @@ export function SoundBrowser() {
   const [draggingSound, setDraggingSound] = useState<SoundPreset | null>(null);
   const synthRef = useRef<any>(null);
   
-  const { setProject, resetProject } = useAudioStore();
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loadingProjects, setLoadingProjects] = useState(false);
+  const { setProject, resetProject, savedProjects, loadingSavedProjects, fetchSavedProjects, setCurrentProjectId } = useAudioStore();
 
   const categories = getCategories();
   const filteredResults = searchQuery ? searchSounds(searchQuery) : null;
@@ -48,26 +46,11 @@ export function SoundBrowser() {
     };
   }, []);
 
-  const fetchProjects = async () => {
-      setLoadingProjects(true);
-      try {
-          const res = await fetch("/api/projects");
-          if (res.ok) {
-              const data = await res.json();
-              setProjects(data);
-          }
-      } catch (err) {
-          console.error("Failed to fetch projects", err);
-      } finally {
-          setLoadingProjects(false);
-      }
-  };
-
   useEffect(() => {
       if (browserMode === 'projects') {
-          fetchProjects();
+          fetchSavedProjects();
       }
-  }, [browserMode]);
+  }, [browserMode, fetchSavedProjects]);
 
   const loadProject = (projectData: any) => {
       try {
@@ -75,7 +58,8 @@ export function SoundBrowser() {
           resetProject();
           setTimeout(() => {
              const parsed = ProjectSchema.parse(projectData.data);
-             setProject(parsed);
+             setProject(parsed, projectData.id); // Pass project ID for auto-save
+             setCurrentProjectId(projectData.id);
              toast.success(`Loaded project: ${projectData.name}`);
           }, 50);
       } catch (e) {
@@ -270,14 +254,14 @@ export function SoundBrowser() {
             </>
         ) : (
             <ScrollArea className="flex-1 bg-[#18181b] min-h-0">
-                {loadingProjects ? (
+                {loadingSavedProjects ? (
                     <div className="p-4 text-center text-xs text-zinc-500">Loading projects...</div>
                 ) : (
                     <div className="flex flex-col">
-                        {projects.length === 0 ? (
+                        {savedProjects.length === 0 ? (
                             <div className="p-4 text-center text-xs text-zinc-500">No projects saved.</div>
                         ) : (
-                            projects.map(p => (
+                            savedProjects.map(p => (
                                 <div 
                                     key={p.id}
                                     onClick={() => loadProject(p)}
@@ -313,7 +297,7 @@ export function SoundBrowser() {
                         0
                     )} SOUNDS // READY`
           ) : (
-              `${projects.length} PROJECTS // READY`
+              `${savedProjects.length} PROJECTS // READY`
           )}
         </div>
       </div>

@@ -13,7 +13,7 @@ export function useAudioEngine() {
     const synthTypesRef = useRef<Map<string, string>>(new Map());
     const recorderRef = useRef<Tone.Recorder | null>(null);
     const structureHashRef = useRef<string>("");
-    const masterChainRef = useRef<{ limiter: Tone.Limiter, compressor: Tone.Compressor, gain: Tone.Gain } | null>(null);
+    const masterChainRef = useRef<{ limiter: Tone.Limiter, compressor: Tone.Compressor, gain: Tone.Gain, speakerGain: Tone.Gain } | null>(null);
     const sidechainRef = useRef<Tone.Compressor | null>(null);
 
     const initAudio = async () => {
@@ -21,19 +21,26 @@ export function useAudioEngine() {
 
         // Initialize Master Chain - v12: More headroom for 5-7 track arrangements
         if (!masterChainRef.current) {
-            const gain = new Tone.Gain(0.5).toDestination(); // -6dB master headroom (was 0.7)
-            const limiter = new Tone.Limiter(-0.5).connect(gain); // Lower threshold
+            // Recording gain (before speaker output)
+            const recordGain = new Tone.Gain(0.5);
+            
+            // Speaker output gain (can be muted during export)
+            const speakerGain = new Tone.Gain(1).toDestination();
+            recordGain.connect(speakerGain);
+            
+            const limiter = new Tone.Limiter(-0.5).connect(recordGain);
             const compressor = new Tone.Compressor({
-                threshold: -18,  // Lower threshold for more tracks
-                ratio: 3,        // Higher ratio
+                threshold: -18,
+                ratio: 3,
                 attack: 0.003,
                 release: 0.25
             }).connect(limiter);
-            masterChainRef.current = { limiter, compressor, gain };
+            
+            masterChainRef.current = { limiter, compressor, gain: recordGain, speakerGain };
 
-            // Initialize Recorder
+            // Initialize Recorder - connected to recordGain (before speaker mute)
             recorderRef.current = new Tone.Recorder();
-            gain.connect(recorderRef.current);
+            recordGain.connect(recorderRef.current);
         }
 
         Tone.getTransport().loop = true;
@@ -70,37 +77,144 @@ export function useAudioEngine() {
         return null;
     };
 
-    const renderAudio = async () => {
-        if (!recorderRef.current) return;
+    const isExportingRef = useRef(false);
 
+    const renderAudio = async (onProgress?: (percent: number) => void) => {
+        // Mark as exporting FIRST to prevent playback effect interference
+        isExportingRef.current = true;
+        
+        // Ensure audio is initialized
+        if (!recorderRef.current || !masterChainRef.current) {
+            console.log("Initializing audio for export...");
+            await initAudio();
+        }
+        
+        if (!recorderRef.current || !masterChainRef.current) {
+            console.error("Failed to initialize audio for export");
+            isExportingRef.current = false;
+            return;
+        }
+        
+        const { project, setIsPlaying, setCurrentBar } = useAudioStore.getState();
+        if (!project || project.tracks.length === 0) {
+            console.warn("No project to render");
+            return;
+        }
+
+        // Calculate actual project duration based on clips
+        let maxBar = 0;
+        project.tracks.forEach(track => {
+            track.clips.forEach(clip => {
+                const clipEnd = clip.startBar + clip.durationBars;
+                if (clipEnd > maxBar) {
+                    maxBar = clipEnd;
+                }
+            });
+        });
+
+        if (maxBar === 0) {
+            console.warn("No clips to render");
+            return;
+        }
+
+        // Add 1 bar buffer for tail/reverb
+        maxBar += 1;
+
+        const bpm = project.bpm || 120;
+        const secondsPerBar = 60 / bpm * 4; // 4 beats per bar
+        const durationSeconds = maxBar * secondsPerBar;
+
+        console.log(`Rendering ${maxBar} bars at ${bpm} BPM = ${durationSeconds.toFixed(1)} seconds (silent export)`);
+
+        // Stop current playback and sync state
+        setIsPlaying(false);
         if (Tone.getTransport().state === 'started') {
             Tone.getTransport().stop();
         }
 
-        await recorderRef.current.start();
+        // Mute speaker output during export (recording still captures audio)
+        let originalSpeakerGain = 1;
+        if (masterChainRef.current?.speakerGain) {
+            originalSpeakerGain = masterChainRef.current.speakerGain.gain.value;
+            masterChainRef.current.speakerGain.gain.value = 0;
+        }
+
+        // Start recording
+        console.log("Starting recorder...");
+        try {
+            // Ensure audio context is running
+            if (Tone.getContext().state !== 'running') {
+                console.log("Resuming audio context...");
+                await Tone.getContext().resume();
+            }
+            
+            // Stop any existing recording first
+            if (recorderRef.current.state === 'started') {
+                console.log("Stopping existing recording...");
+                await recorderRef.current.stop();
+            }
+            
+            console.log(`Recorder state before start: ${recorderRef.current.state}`);
+            recorderRef.current.start();
+            console.log("Recorder started successfully");
+        } catch (err) {
+            console.error("Failed to start recorder:", err);
+            isExportingRef.current = false;
+            if (masterChainRef.current?.speakerGain) {
+                masterChainRef.current.speakerGain.gain.value = originalSpeakerGain;
+            }
+            return;
+        }
+        
         Tone.getTransport().position = 0;
-        await Tone.getTransport().start();
+        
+        // Temporarily disable loop for export
+        const wasLooping = Tone.getTransport().loop;
+        Tone.getTransport().loop = false;
+        
+        console.log("Starting transport for export...");
+        Tone.getTransport().start();
+        console.log(`Export started, will take ${durationSeconds.toFixed(1)} seconds`);
 
-        // Calculate duration
-        const loopEndStr = Tone.getTransport().loopEnd;
-        // loopEnd might be string or number. Default "128:0:0"
-        const loopEndSeconds = Tone.Time(loopEndStr).toSeconds();
-
-        console.log(`Rendering for ${loopEndSeconds} seconds...`);
+        // Progress updates
+        const startTime = Date.now();
+        const progressInterval = setInterval(() => {
+            const elapsed = (Date.now() - startTime) / 1000;
+            const percent = Math.min((elapsed / durationSeconds) * 100, 99);
+            console.log(`Export progress: ${percent.toFixed(0)}%`);
+            onProgress?.(percent);
+        }, 500); // Update every 500ms for less spam
 
         return new Promise<void>((resolve) => {
             setTimeout(async () => {
+                clearInterval(progressInterval);
+                onProgress?.(100);
+                
                 Tone.getTransport().stop();
+                Tone.getTransport().loop = wasLooping; // Restore loop state
+                Tone.getTransport().position = 0; // Reset position
+                
+                // Restore speaker volume
+                if (masterChainRef.current?.speakerGain) {
+                    masterChainRef.current.speakerGain.gain.value = originalSpeakerGain;
+                }
+                
+                // Sync store state
+                setCurrentBar(0);
+                setIsPlaying(false);
+                isExportingRef.current = false;
+                
                 if (recorderRef.current && recorderRef.current.state === 'started') {
                     const recording = await recorderRef.current.stop();
                     const url = URL.createObjectURL(recording);
                     const anchor = document.createElement("a");
-                    anchor.download = "vibepod-track.webm";
+                    anchor.download = `vibepod-${Date.now()}.webm`;
                     anchor.href = url;
                     anchor.click();
+                    URL.revokeObjectURL(url);
                 }
                 resolve();
-            }, loopEndSeconds * 1000 + 500); // 500ms safety buffer
+            }, durationSeconds * 1000 + 300);
         });
     };
 
@@ -335,12 +449,21 @@ export function useAudioEngine() {
 
     // Handling Playback State
     useEffect(() => {
+        // Skip if we're exporting - export controls transport directly
+        if (isExportingRef.current) {
+            console.log(`Playback effect skipped (exporting)`);
+            return;
+        }
+        
+        console.log(`Playback state changed: isPlaying=${isPlaying}, transport=${Tone.getTransport().state}`);
         if (isPlaying) {
             if (Tone.getTransport().state !== 'started') {
+                console.log('Starting transport...');
                 Tone.getTransport().start();
             }
         } else {
             if (Tone.getTransport().state === 'started') {
+                console.log('Pausing transport...');
                 Tone.getTransport().pause();
             }
         }
@@ -363,30 +486,41 @@ export function useAudioEngine() {
         let animationFrameId: number;
         let lastUpdate = 0;
         const throttleMs = 16; // ~60fps
+        let frameCount = 0;
 
         const updatePlayhead = (timestamp: number) => {
             // Throttle updates to reduce re-renders
             if (timestamp - lastUpdate >= throttleMs) {
-                if (Tone.getTransport().state === 'started') {
+                const transportState = Tone.getTransport().state;
+                if (transportState === 'started') {
                     const position = Tone.getTransport().position.toString().split(':');
                     const bars = parseInt(position[0]);
                     const beats = parseInt(position[1]);
                     const sixteenths = parseFloat(position[2]);
-                    setCurrentBar(bars + beats / 4 + sixteenths / 16);
+                    const currentPos = bars + beats / 4 + sixteenths / 16;
+                    useAudioStore.getState().setCurrentBar(currentPos);
+                    
+                    // Log every 60 frames (~1 second)
+                    frameCount++;
+                    if (frameCount % 60 === 0) {
+                        console.log(`Playhead: bar ${currentPos.toFixed(2)}, transport: ${transportState}`);
+                    }
                 }
                 lastUpdate = timestamp;
             }
             animationFrameId = requestAnimationFrame(updatePlayhead);
         };
 
+        console.log('Starting playhead animation frame');
         animationFrameId = requestAnimationFrame(updatePlayhead);
 
         return () => {
+            console.log('Stopping playhead animation frame');
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
             }
         };
-    }, [setCurrentBar]);
+    }, []); // Empty deps - runs once, uses getState() for updates
 
     return { initAudio, startRecording, stopRecording, renderAudio };
 }
